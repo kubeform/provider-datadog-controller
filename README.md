@@ -3,7 +3,7 @@
 
 # provider-datadog-controller
 
-Kubeform controller for [Terraform Datadog Provider](https://github.com/equinix/terraform-provider-metal)
+Kubeform controller for [Terraform Datadog Provider](https://github.com/DataDog/terraform-provider-datadog)
 
 ## Installation
 
