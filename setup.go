@@ -50,7 +50,6 @@ import (
 	servicev1alpha1 "kubeform.dev/provider-datadog-api/apis/service/v1alpha1"
 	slov1alpha1 "kubeform.dev/provider-datadog-api/apis/slo/v1alpha1"
 	syntheticsv1alpha1 "kubeform.dev/provider-datadog-api/apis/synthetics/v1alpha1"
-	syntheticstestv1alpha1 "kubeform.dev/provider-datadog-api/apis/syntheticstest/v1alpha1"
 	userv1alpha1 "kubeform.dev/provider-datadog-api/apis/user/v1alpha1"
 	controllersdashboard "kubeform.dev/provider-datadog-controller/controllers/dashboard"
 	controllersdowntime "kubeform.dev/provider-datadog-controller/controllers/downtime"
@@ -63,7 +62,6 @@ import (
 	controllersservice "kubeform.dev/provider-datadog-controller/controllers/service"
 	controllersslo "kubeform.dev/provider-datadog-controller/controllers/slo"
 	controllerssynthetics "kubeform.dev/provider-datadog-controller/controllers/synthetics"
-	controllerssyntheticstest "kubeform.dev/provider-datadog-controller/controllers/syntheticstest"
 	controllersuser "kubeform.dev/provider-datadog-controller/controllers/user"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -809,11 +807,11 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 			return err
 		}
 	case schema.GroupVersionKind{
-		Group:   "syntheticstest.datadog.kubeform.com",
+		Group:   "synthetics.datadog.kubeform.com",
 		Version: "v1alpha1",
 		Kind:    "Syntheticstest",
 	}:
-		if err := (&controllerssyntheticstest.SyntheticstestReconciler{
+		if err := (&controllerssynthetics.SyntheticstestReconciler{
 			Client:           mgr.GetClient(),
 			Log:              ctrl.Log.WithName("controllers").WithName("Syntheticstest"),
 			Scheme:           mgr.GetScheme(),
@@ -1134,11 +1132,11 @@ func SetupWebhook(mgr manager.Manager, gvk schema.GroupVersionKind) error {
 			return err
 		}
 	case schema.GroupVersionKind{
-		Group:   "syntheticstest.datadog.kubeform.com",
+		Group:   "synthetics.datadog.kubeform.com",
 		Version: "v1alpha1",
 		Kind:    "Syntheticstest",
 	}:
-		if err := (&syntheticstestv1alpha1.Syntheticstest{}).SetupWebhookWithManager(mgr); err != nil {
+		if err := (&syntheticsv1alpha1.Syntheticstest{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Syntheticstest")
 			return err
 		}

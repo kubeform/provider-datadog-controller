@@ -1097,7 +1097,7 @@ kmodules.xyz/resource-metadata/pkg/graph
 # kubeform.dev/apimachinery v0.0.0-20210629153539-7bcd34a30eb5
 ## explicit
 kubeform.dev/apimachinery/api/v1alpha1
-# kubeform.dev/provider-datadog-api v0.3.1-0.20210803083103-d832eac6d0b1
+# kubeform.dev/provider-datadog-api v0.3.1-0.20210805155109-6623fb4ff3a6
 ## explicit
 kubeform.dev/provider-datadog-api/api/provider
 kubeform.dev/provider-datadog-api/apis/dashboard
@@ -1122,8 +1122,6 @@ kubeform.dev/provider-datadog-api/apis/slo
 kubeform.dev/provider-datadog-api/apis/slo/v1alpha1
 kubeform.dev/provider-datadog-api/apis/synthetics
 kubeform.dev/provider-datadog-api/apis/synthetics/v1alpha1
-kubeform.dev/provider-datadog-api/apis/syntheticstest
-kubeform.dev/provider-datadog-api/apis/syntheticstest/v1alpha1
 kubeform.dev/provider-datadog-api/apis/user
 kubeform.dev/provider-datadog-api/apis/user/v1alpha1
 kubeform.dev/provider-datadog-api/client/clientset/versioned/scheme
