@@ -74,7 +74,7 @@ var runningControllers = struct {
 	mp map[schema.GroupVersionKind]bool
 }{mp: make(map[schema.GroupVersionKind]bool)}
 
-func watchCRD(ctx context.Context, crdClient *clientset.Clientset, vwcClient *admissionregistrationv1.AdmissionregistrationV1Client, stopCh <-chan struct{}, mgr manager.Manager, auditor *auditlib.EventPublisher, watchOnlyDefault bool) error {
+func watchCRD(ctx context.Context, crdClient *clientset.Clientset, vwcClient *admissionregistrationv1.AdmissionregistrationV1Client, stopCh <-chan struct{}, mgr manager.Manager, auditor *auditlib.EventPublisher, restrictToNamespace string) error {
 	informerFactory := informers.NewSharedInformerFactory(crdClient, time.Second*30)
 	i := informerFactory.Apiextensions().V1().CustomResourceDefinitions().Informer()
 	l := informerFactory.Apiextensions().V1().CustomResourceDefinitions().Lister()
@@ -140,7 +140,7 @@ func watchCRD(ctx context.Context, crdClient *clientset.Clientset, vwcClient *ad
 						}
 					}
 
-					err = SetupManager(ctx, mgr, gvk, auditor, watchOnlyDefault)
+					err = SetupManager(ctx, mgr, gvk, auditor, restrictToNamespace)
 					if err != nil {
 						setupLog.Error(err, "unable to start manager")
 						os.Exit(1)
@@ -199,6 +199,7 @@ func updateVWC(vwcClient *admissionregistrationv1.AdmissionregistrationV1Client,
 		{
 			Operations: []arv1.OperationType{
 				arv1.Delete,
+				arv1.Update,
 			},
 			Rule: arv1.Rule{
 				APIGroups:   []string{strings.ToLower(gvk.Group)},
@@ -246,7 +247,7 @@ func updateVWC(vwcClient *admissionregistrationv1.AdmissionregistrationV1Client,
 	return nil
 }
 
-func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVersionKind, auditor *auditlib.EventPublisher, watchOnlyDefault bool) error {
+func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVersionKind, auditor *auditlib.EventPublisher, restrictToNamespace string) error {
 	switch gvk {
 	case schema.GroupVersionKind{
 		Group:   "dashboard.datadog.kubeform.com",
@@ -254,15 +255,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Dashboard",
 	}:
 		if err := (&controllersdashboard.DashboardReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Dashboard"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_dashboard"],
-			TypeName:         "datadog_dashboard",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Dashboard"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_dashboard"],
+			TypeName: "datadog_dashboard",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Dashboard")
 			return err
 		}
@@ -272,15 +272,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Json",
 	}:
 		if err := (&controllersdashboard.JsonReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Json"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_dashboard_json"],
-			TypeName:         "datadog_dashboard_json",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Json"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_dashboard_json"],
+			TypeName: "datadog_dashboard_json",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Json")
 			return err
 		}
@@ -290,15 +289,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "List",
 	}:
 		if err := (&controllersdashboard.ListReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("List"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_dashboard_list"],
-			TypeName:         "datadog_dashboard_list",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("List"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_dashboard_list"],
+			TypeName: "datadog_dashboard_list",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "List")
 			return err
 		}
@@ -308,15 +306,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Downtime",
 	}:
 		if err := (&controllersdowntime.DowntimeReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Downtime"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_downtime"],
-			TypeName:         "datadog_downtime",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Downtime"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_downtime"],
+			TypeName: "datadog_downtime",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Downtime")
 			return err
 		}
@@ -326,15 +323,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Aws",
 	}:
 		if err := (&controllersintegration.AwsReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Aws"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_aws"],
-			TypeName:         "datadog_integration_aws",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Aws"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_aws"],
+			TypeName: "datadog_integration_aws",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Aws")
 			return err
 		}
@@ -344,15 +340,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "AwsLambdaArn",
 	}:
 		if err := (&controllersintegration.AwsLambdaArnReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("AwsLambdaArn"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_aws_lambda_arn"],
-			TypeName:         "datadog_integration_aws_lambda_arn",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("AwsLambdaArn"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_aws_lambda_arn"],
+			TypeName: "datadog_integration_aws_lambda_arn",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "AwsLambdaArn")
 			return err
 		}
@@ -362,15 +357,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "AwsLogCollection",
 	}:
 		if err := (&controllersintegration.AwsLogCollectionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("AwsLogCollection"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_aws_log_collection"],
-			TypeName:         "datadog_integration_aws_log_collection",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("AwsLogCollection"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_aws_log_collection"],
+			TypeName: "datadog_integration_aws_log_collection",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "AwsLogCollection")
 			return err
 		}
@@ -380,15 +374,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "AwsTagFilter",
 	}:
 		if err := (&controllersintegration.AwsTagFilterReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("AwsTagFilter"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_aws_tag_filter"],
-			TypeName:         "datadog_integration_aws_tag_filter",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("AwsTagFilter"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_aws_tag_filter"],
+			TypeName: "datadog_integration_aws_tag_filter",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "AwsTagFilter")
 			return err
 		}
@@ -398,15 +391,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Azure",
 	}:
 		if err := (&controllersintegration.AzureReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Azure"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_azure"],
-			TypeName:         "datadog_integration_azure",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Azure"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_azure"],
+			TypeName: "datadog_integration_azure",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Azure")
 			return err
 		}
@@ -416,15 +408,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Gcp",
 	}:
 		if err := (&controllersintegration.GcpReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Gcp"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_gcp"],
-			TypeName:         "datadog_integration_gcp",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Gcp"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_gcp"],
+			TypeName: "datadog_integration_gcp",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Gcp")
 			return err
 		}
@@ -434,15 +425,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Pagerduty",
 	}:
 		if err := (&controllersintegration.PagerdutyReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Pagerduty"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_pagerduty"],
-			TypeName:         "datadog_integration_pagerduty",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Pagerduty"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_pagerduty"],
+			TypeName: "datadog_integration_pagerduty",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Pagerduty")
 			return err
 		}
@@ -452,15 +442,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "PagerdutyServiceObject",
 	}:
 		if err := (&controllersintegration.PagerdutyServiceObjectReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("PagerdutyServiceObject"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_pagerduty_service_object"],
-			TypeName:         "datadog_integration_pagerduty_service_object",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("PagerdutyServiceObject"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_pagerduty_service_object"],
+			TypeName: "datadog_integration_pagerduty_service_object",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "PagerdutyServiceObject")
 			return err
 		}
@@ -470,15 +459,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "SlackChannel",
 	}:
 		if err := (&controllersintegration.SlackChannelReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("SlackChannel"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_integration_slack_channel"],
-			TypeName:         "datadog_integration_slack_channel",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("SlackChannel"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_integration_slack_channel"],
+			TypeName: "datadog_integration_slack_channel",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "SlackChannel")
 			return err
 		}
@@ -488,15 +476,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Archive",
 	}:
 		if err := (&controllerslogs.ArchiveReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Archive"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_archive"],
-			TypeName:         "datadog_logs_archive",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Archive"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_archive"],
+			TypeName: "datadog_logs_archive",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Archive")
 			return err
 		}
@@ -506,15 +493,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "ArchiveOrder",
 	}:
 		if err := (&controllerslogs.ArchiveOrderReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("ArchiveOrder"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_archive_order"],
-			TypeName:         "datadog_logs_archive_order",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("ArchiveOrder"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_archive_order"],
+			TypeName: "datadog_logs_archive_order",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "ArchiveOrder")
 			return err
 		}
@@ -524,15 +510,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "CustomPipeline",
 	}:
 		if err := (&controllerslogs.CustomPipelineReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("CustomPipeline"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_custom_pipeline"],
-			TypeName:         "datadog_logs_custom_pipeline",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("CustomPipeline"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_custom_pipeline"],
+			TypeName: "datadog_logs_custom_pipeline",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "CustomPipeline")
 			return err
 		}
@@ -542,15 +527,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Index",
 	}:
 		if err := (&controllerslogs.IndexReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Index"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_index"],
-			TypeName:         "datadog_logs_index",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Index"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_index"],
+			TypeName: "datadog_logs_index",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Index")
 			return err
 		}
@@ -560,15 +544,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "IndexOrder",
 	}:
 		if err := (&controllerslogs.IndexOrderReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("IndexOrder"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_index_order"],
-			TypeName:         "datadog_logs_index_order",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("IndexOrder"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_index_order"],
+			TypeName: "datadog_logs_index_order",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "IndexOrder")
 			return err
 		}
@@ -578,15 +561,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "IntegrationPipeline",
 	}:
 		if err := (&controllerslogs.IntegrationPipelineReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("IntegrationPipeline"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_integration_pipeline"],
-			TypeName:         "datadog_logs_integration_pipeline",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("IntegrationPipeline"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_integration_pipeline"],
+			TypeName: "datadog_logs_integration_pipeline",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "IntegrationPipeline")
 			return err
 		}
@@ -596,15 +578,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Metric",
 	}:
 		if err := (&controllerslogs.MetricReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Metric"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_metric"],
-			TypeName:         "datadog_logs_metric",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Metric"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_metric"],
+			TypeName: "datadog_logs_metric",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Metric")
 			return err
 		}
@@ -614,15 +595,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "PipelineOrder",
 	}:
 		if err := (&controllerslogs.PipelineOrderReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("PipelineOrder"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_logs_pipeline_order"],
-			TypeName:         "datadog_logs_pipeline_order",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("PipelineOrder"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_logs_pipeline_order"],
+			TypeName: "datadog_logs_pipeline_order",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "PipelineOrder")
 			return err
 		}
@@ -632,15 +612,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Metadata",
 	}:
 		if err := (&controllersmetric.MetadataReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Metadata"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_metric_metadata"],
-			TypeName:         "datadog_metric_metadata",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Metadata"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_metric_metadata"],
+			TypeName: "datadog_metric_metadata",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Metadata")
 			return err
 		}
@@ -650,15 +629,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "TagConfiguration",
 	}:
 		if err := (&controllersmetric.TagConfigurationReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("TagConfiguration"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_metric_tag_configuration"],
-			TypeName:         "datadog_metric_tag_configuration",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("TagConfiguration"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_metric_tag_configuration"],
+			TypeName: "datadog_metric_tag_configuration",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "TagConfiguration")
 			return err
 		}
@@ -668,15 +646,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Monitor",
 	}:
 		if err := (&controllersmonitor.MonitorReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Monitor"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_monitor"],
-			TypeName:         "datadog_monitor",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Monitor"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_monitor"],
+			TypeName: "datadog_monitor",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Monitor")
 			return err
 		}
@@ -686,15 +663,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Role",
 	}:
 		if err := (&controllersrole.RoleReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Role"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_role"],
-			TypeName:         "datadog_role",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Role"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_role"],
+			TypeName: "datadog_role",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Role")
 			return err
 		}
@@ -704,15 +680,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "MonitoringDefaultRule",
 	}:
 		if err := (&controllerssecurity.MonitoringDefaultRuleReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("MonitoringDefaultRule"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_security_monitoring_default_rule"],
-			TypeName:         "datadog_security_monitoring_default_rule",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("MonitoringDefaultRule"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_security_monitoring_default_rule"],
+			TypeName: "datadog_security_monitoring_default_rule",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "MonitoringDefaultRule")
 			return err
 		}
@@ -722,15 +697,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "MonitoringRule",
 	}:
 		if err := (&controllerssecurity.MonitoringRuleReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("MonitoringRule"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_security_monitoring_rule"],
-			TypeName:         "datadog_security_monitoring_rule",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("MonitoringRule"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_security_monitoring_rule"],
+			TypeName: "datadog_security_monitoring_rule",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "MonitoringRule")
 			return err
 		}
@@ -740,15 +714,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "LevelObjective",
 	}:
 		if err := (&controllersservice.LevelObjectiveReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("LevelObjective"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_service_level_objective"],
-			TypeName:         "datadog_service_level_objective",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("LevelObjective"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_service_level_objective"],
+			TypeName: "datadog_service_level_objective",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "LevelObjective")
 			return err
 		}
@@ -758,15 +731,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Correction",
 	}:
 		if err := (&controllersslo.CorrectionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Correction"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_slo_correction"],
-			TypeName:         "datadog_slo_correction",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Correction"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_slo_correction"],
+			TypeName: "datadog_slo_correction",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Correction")
 			return err
 		}
@@ -776,15 +748,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "GlobalVariable",
 	}:
 		if err := (&controllerssynthetics.GlobalVariableReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("GlobalVariable"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_synthetics_global_variable"],
-			TypeName:         "datadog_synthetics_global_variable",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("GlobalVariable"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_synthetics_global_variable"],
+			TypeName: "datadog_synthetics_global_variable",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "GlobalVariable")
 			return err
 		}
@@ -794,15 +765,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "PrivateLocation",
 	}:
 		if err := (&controllerssynthetics.PrivateLocationReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("PrivateLocation"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_synthetics_private_location"],
-			TypeName:         "datadog_synthetics_private_location",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("PrivateLocation"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_synthetics_private_location"],
+			TypeName: "datadog_synthetics_private_location",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "PrivateLocation")
 			return err
 		}
@@ -812,15 +782,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Syntheticstest",
 	}:
 		if err := (&controllerssynthetics.SyntheticstestReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Syntheticstest"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_synthetics_test"],
-			TypeName:         "datadog_synthetics_test",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Syntheticstest"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_synthetics_test"],
+			TypeName: "datadog_synthetics_test",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Syntheticstest")
 			return err
 		}
@@ -830,15 +799,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "User",
 	}:
 		if err := (&controllersuser.UserReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("User"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["datadog_user"],
-			TypeName:         "datadog_user",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("User"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_user"],
+			TypeName: "datadog_user",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "User")
 			return err
 		}
