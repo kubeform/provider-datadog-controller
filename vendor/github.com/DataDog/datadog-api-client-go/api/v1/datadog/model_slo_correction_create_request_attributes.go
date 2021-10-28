@@ -13,19 +13,21 @@ import (
 	"fmt"
 )
 
-// SLOCorrectionCreateRequestAttributes The attribute object associated with the SLO correction to be created
+// SLOCorrectionCreateRequestAttributes The attribute object associated with the SLO correction to be created.
 type SLOCorrectionCreateRequestAttributes struct {
 	Category SLOCorrectionCategory `json:"category"`
 	// Description of the correction being made.
 	Description *string `json:"description,omitempty"`
-	// Ending time of the correction in epoch seconds
+	// Ending time of the correction in epoch seconds.
 	End int64 `json:"end"`
-	// ID of the SLO that this correction will be applied to
+	// ID of the SLO that this correction will be applied to.
 	SloId string `json:"slo_id"`
-	// Starting time of the correction in epoch seconds
+	// Starting time of the correction in epoch seconds.
 	Start int64 `json:"start"`
-	// The timezone to display in the UI for the correction times (defaults to \"UTC\")
+	// The timezone to display in the UI for the correction times (defaults to \"UTC\").
 	Timezone *string `json:"timezone,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewSLOCorrectionCreateRequestAttributes instantiates a new SLOCorrectionCreateRequestAttributes object
@@ -211,6 +213,9 @@ func (o *SLOCorrectionCreateRequestAttributes) SetTimezone(v string) {
 
 func (o SLOCorrectionCreateRequestAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if true {
 		toSerialize["category"] = o.Category
 	}
@@ -233,6 +238,7 @@ func (o SLOCorrectionCreateRequestAttributes) MarshalJSON() ([]byte, error) {
 }
 
 func (o *SLOCorrectionCreateRequestAttributes) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		Category *SLOCorrectionCategory `json:"category"`
 		End      *int64                 `json:"end"`
@@ -265,7 +271,20 @@ func (o *SLOCorrectionCreateRequestAttributes) UnmarshalJSON(bytes []byte) (err 
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Category; !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.Category = all.Category
 	o.Description = all.Description

@@ -21,18 +21,23 @@ package main
 import (
 	jsoniter "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	apikeyv1alpha1 "kubeform.dev/provider-datadog-api/apis/apikey/v1alpha1"
+	applicationv1alpha1 "kubeform.dev/provider-datadog-api/apis/application/v1alpha1"
+	childv1alpha1 "kubeform.dev/provider-datadog-api/apis/child/v1alpha1"
 	dashboardv1alpha1 "kubeform.dev/provider-datadog-api/apis/dashboard/v1alpha1"
 	downtimev1alpha1 "kubeform.dev/provider-datadog-api/apis/downtime/v1alpha1"
 	integrationv1alpha1 "kubeform.dev/provider-datadog-api/apis/integration/v1alpha1"
 	logsv1alpha1 "kubeform.dev/provider-datadog-api/apis/logs/v1alpha1"
 	metricv1alpha1 "kubeform.dev/provider-datadog-api/apis/metric/v1alpha1"
 	monitorv1alpha1 "kubeform.dev/provider-datadog-api/apis/monitor/v1alpha1"
+	organizationv1alpha1 "kubeform.dev/provider-datadog-api/apis/organization/v1alpha1"
 	rolev1alpha1 "kubeform.dev/provider-datadog-api/apis/role/v1alpha1"
 	securityv1alpha1 "kubeform.dev/provider-datadog-api/apis/security/v1alpha1"
 	servicev1alpha1 "kubeform.dev/provider-datadog-api/apis/service/v1alpha1"
 	slov1alpha1 "kubeform.dev/provider-datadog-api/apis/slo/v1alpha1"
 	syntheticsv1alpha1 "kubeform.dev/provider-datadog-api/apis/synthetics/v1alpha1"
 	userv1alpha1 "kubeform.dev/provider-datadog-api/apis/user/v1alpha1"
+	webhookv1alpha1 "kubeform.dev/provider-datadog-api/apis/webhook/v1alpha1"
 	"kubeform.dev/provider-datadog-controller/controllers"
 )
 
@@ -43,6 +48,30 @@ type Data struct {
 
 var (
 	allJsonIt = map[schema.GroupVersionResource]Data{
+		{
+			Group:    "apikey.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "apikeys",
+		}: {
+			JsonIt:       controllers.GetJSONItr(apikeyv1alpha1.GetEncoder(), apikeyv1alpha1.GetDecoder()),
+			ResourceType: "datadog_api_key",
+		},
+		{
+			Group:    "application.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "keys",
+		}: {
+			JsonIt:       controllers.GetJSONItr(applicationv1alpha1.GetEncoder(), applicationv1alpha1.GetDecoder()),
+			ResourceType: "datadog_application_key",
+		},
+		{
+			Group:    "child.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "organizations",
+		}: {
+			JsonIt:       controllers.GetJSONItr(childv1alpha1.GetEncoder(), childv1alpha1.GetDecoder()),
+			ResourceType: "datadog_child_organization",
+		},
 		{
 			Group:    "dashboard.datadog.kubeform.com",
 			Version:  "v1alpha1",
@@ -236,6 +265,22 @@ var (
 			ResourceType: "datadog_monitor",
 		},
 		{
+			Group:    "monitor.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "jsons",
+		}: {
+			JsonIt:       controllers.GetJSONItr(monitorv1alpha1.GetEncoder(), monitorv1alpha1.GetDecoder()),
+			ResourceType: "datadog_monitor_json",
+		},
+		{
+			Group:    "organization.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "settings",
+		}: {
+			JsonIt:       controllers.GetJSONItr(organizationv1alpha1.GetEncoder(), organizationv1alpha1.GetDecoder()),
+			ResourceType: "datadog_organization_settings",
+		},
+		{
 			Group:    "role.datadog.kubeform.com",
 			Version:  "v1alpha1",
 			Resource: "roles",
@@ -250,6 +295,14 @@ var (
 		}: {
 			JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
 			ResourceType: "datadog_security_monitoring_default_rule",
+		},
+		{
+			Group:    "security.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "monitoringfilters",
+		}: {
+			JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
+			ResourceType: "datadog_security_monitoring_filter",
 		},
 		{
 			Group:    "security.datadog.kubeform.com",
@@ -306,6 +359,22 @@ var (
 		}: {
 			JsonIt:       controllers.GetJSONItr(userv1alpha1.GetEncoder(), userv1alpha1.GetDecoder()),
 			ResourceType: "datadog_user",
+		},
+		{
+			Group:    "webhook.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "webhooks",
+		}: {
+			JsonIt:       controllers.GetJSONItr(webhookv1alpha1.GetEncoder(), webhookv1alpha1.GetDecoder()),
+			ResourceType: "datadog_webhook",
+		},
+		{
+			Group:    "webhook.datadog.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "customvariables",
+		}: {
+			JsonIt:       controllers.GetJSONItr(webhookv1alpha1.GetEncoder(), webhookv1alpha1.GetDecoder()),
+			ResourceType: "datadog_webhook_custom_variable",
 		},
 	}
 )

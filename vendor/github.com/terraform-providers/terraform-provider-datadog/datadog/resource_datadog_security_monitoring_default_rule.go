@@ -15,7 +15,7 @@ import (
 
 func resourceDatadogSecurityMonitoringDefaultRule() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Provides a Datadog Security Monitoring Rule API resource for default rules.",
+		Description:   "Provides a Datadog Security Monitoring Rule API resource for default rules. It can only be imported, you can't create a default rule.",
 		CreateContext: resourceDatadogSecurityMonitoringDefaultRuleCreate,
 		ReadContext:   resourceDatadogSecurityMonitoringDefaultRuleRead,
 		UpdateContext: resourceDatadogSecurityMonitoringDefaultRuleUpdate,
@@ -93,6 +93,9 @@ func resourceDatadogSecurityMonitoringDefaultRuleRead(ctx context.Context, d *sc
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	if err := utils.CheckForUnparsed(ruleResponse); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.Set("enabled", *ruleResponse.IsEnabled)
 
@@ -148,6 +151,9 @@ func resourceDatadogSecurityMonitoringDefaultRuleUpdate(ctx context.Context, d *
 		}
 
 		return utils.TranslateClientErrorDiag(err, httpResponse, "error fetching default rule")
+	}
+	if err := utils.CheckForUnparsed(response); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if !response.GetIsDefault() {

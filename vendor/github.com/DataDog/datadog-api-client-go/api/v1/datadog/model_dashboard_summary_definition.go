@@ -20,7 +20,7 @@ type DashboardSummaryDefinition struct {
 	// Creation date of the dashboard.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// Description of the dashboard.
-	Description *string `json:"description,omitempty"`
+	Description NullableString `json:"description,omitempty"`
 	// Dashboard identifier.
 	Id *string `json:"id,omitempty"`
 	// Whether this dashboard is read-only. If True, only the author and admins can make changes to it.
@@ -32,6 +32,8 @@ type DashboardSummaryDefinition struct {
 	Title *string `json:"title,omitempty"`
 	// URL of the dashboard.
 	Url *string `json:"url,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewDashboardSummaryDefinition instantiates a new DashboardSummaryDefinition object
@@ -115,36 +117,47 @@ func (o *DashboardSummaryDefinition) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
 }
 
-// GetDescription returns the Description field value if set, zero value otherwise.
+// GetDescription returns the Description field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *DashboardSummaryDefinition) GetDescription() string {
-	if o == nil || o.Description == nil {
+	if o == nil || o.Description.Get() == nil {
 		var ret string
 		return ret
 	}
-	return *o.Description
+	return *o.Description.Get()
 }
 
 // GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *DashboardSummaryDefinition) GetDescriptionOk() (*string, bool) {
-	if o == nil || o.Description == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Description, true
+	return o.Description.Get(), o.Description.IsSet()
 }
 
 // HasDescription returns a boolean if a field has been set.
 func (o *DashboardSummaryDefinition) HasDescription() bool {
-	if o != nil && o.Description != nil {
+	if o != nil && o.Description.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetDescription gets a reference to the given string and assigns it to the Description field.
+// SetDescription gets a reference to the given NullableString and assigns it to the Description field.
 func (o *DashboardSummaryDefinition) SetDescription(v string) {
-	o.Description = &v
+	o.Description.Set(&v)
+}
+
+// SetDescriptionNil sets the value for Description to be an explicit nil
+func (o *DashboardSummaryDefinition) SetDescriptionNil() {
+	o.Description.Set(nil)
+}
+
+// UnsetDescription ensures that no value is present for Description, not even an explicit nil
+func (o *DashboardSummaryDefinition) UnsetDescription() {
+	o.Description.Unset()
 }
 
 // GetId returns the Id field value if set, zero value otherwise.
@@ -341,14 +354,17 @@ func (o *DashboardSummaryDefinition) SetUrl(v string) {
 
 func (o DashboardSummaryDefinition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.AuthorHandle != nil {
 		toSerialize["author_handle"] = o.AuthorHandle
 	}
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
 	}
-	if o.Description != nil {
-		toSerialize["description"] = o.Description
+	if o.Description.IsSet() {
+		toSerialize["description"] = o.Description.Get()
 	}
 	if o.Id != nil {
 		toSerialize["id"] = o.Id
@@ -369,6 +385,48 @@ func (o DashboardSummaryDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["url"] = o.Url
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *DashboardSummaryDefinition) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		AuthorHandle *string              `json:"author_handle,omitempty"`
+		CreatedAt    *time.Time           `json:"created_at,omitempty"`
+		Description  NullableString       `json:"description,omitempty"`
+		Id           *string              `json:"id,omitempty"`
+		IsReadOnly   *bool                `json:"is_read_only,omitempty"`
+		LayoutType   *DashboardLayoutType `json:"layout_type,omitempty"`
+		ModifiedAt   *time.Time           `json:"modified_at,omitempty"`
+		Title        *string              `json:"title,omitempty"`
+		Url          *string              `json:"url,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.LayoutType; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.AuthorHandle = all.AuthorHandle
+	o.CreatedAt = all.CreatedAt
+	o.Description = all.Description
+	o.Id = all.Id
+	o.IsReadOnly = all.IsReadOnly
+	o.LayoutType = all.LayoutType
+	o.ModifiedAt = all.ModifiedAt
+	o.Title = all.Title
+	o.Url = all.Url
+	return nil
 }
 
 type NullableDashboardSummaryDefinition struct {

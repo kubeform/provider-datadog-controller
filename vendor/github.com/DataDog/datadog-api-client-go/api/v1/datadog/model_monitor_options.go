@@ -16,10 +16,11 @@ import (
 type MonitorOptions struct {
 	Aggregation *MonitorOptionsAggregation `json:"aggregation,omitempty"`
 	// IDs of the device the Synthetics monitor is running on.
+	// Deprecated
 	DeviceIds *[]MonitorDeviceID `json:"device_ids,omitempty"`
 	// Whether or not to send a log sample when the log monitor triggers.
 	EnableLogsSample *bool `json:"enable_logs_sample,omitempty"`
-	// We recommend using the [is_renotify](https://docs.datadoghq.com/monitors/notifications/?tab=is_alert#renotify), block in the original message instead. A message to include with a re-notification. Supports the `@username` notification we allow elsewhere. Not applicable if `renotify_interval` is `None`.
+	// We recommend using the [is_renotify](https://docs.datadoghq.com/monitors/notify/?tab=is_alert#renotify), block in the original message instead. A message to include with a re-notification. Supports the `@username` notification we allow elsewhere. Not applicable if `renotify_interval` is `None`.
 	EscalationMessage *string `json:"escalation_message,omitempty"`
 	// Time (in seconds) to delay evaluation, as a non-negative integer. For example, if the value is set to `300` (5min), the timeframe is set to `last_5m` and the time is 7:00, the monitor evaluates data from 6:50 to 6:55. This is useful for AWS CloudWatch and other backfilled metrics to ensure the monitor always has data during evaluation.
 	EvaluationDelay NullableInt64 `json:"evaluation_delay,omitempty"`
@@ -33,7 +34,10 @@ type MonitorOptions struct {
 	MinFailureDuration NullableInt64 `json:"min_failure_duration,omitempty"`
 	// The minimum number of locations in failure at the same time during at least one moment in the `min_failure_duration` period (`min_location_failed` and `min_failure_duration` are part of the advanced alerting rules - integer, >= 1).
 	MinLocationFailed NullableInt64 `json:"min_location_failed,omitempty"`
-	// Time (in seconds) to allow a host to boot and applications to fully start before starting the evaluation of monitor results. Should be a non negative integer.
+	// Time (in seconds) to skip evaluations for new groups.  For example, this option can be used to skip evaluations for new hosts while they initialize.  Must be a non negative integer.
+	NewGroupDelay NullableInt64 `json:"new_group_delay,omitempty"`
+	// Time (in seconds) to allow a host to boot and applications to fully start before starting the evaluation of monitor results. Should be a non negative integer.  Use new_group_delay instead.
+	// Deprecated
 	NewHostDelay NullableInt64 `json:"new_host_delay,omitempty"`
 	// The number of minutes before a monitor notifies after data stops reporting. Datadog recommends at least 2x the monitor timeframe for metric alerts or 2 minutes for service checks. If omitted, 2x the evaluation timeframe is used for metric alerts, and 24 hours is used for service checks.
 	NoDataTimeframe NullableInt64 `json:"no_data_timeframe,omitempty"`
@@ -43,16 +47,24 @@ type MonitorOptions struct {
 	NotifyNoData *bool `json:"notify_no_data,omitempty"`
 	// The number of minutes after the last notification before a monitor re-notifies on the current status. It only re-notifies if it’s not resolved.
 	RenotifyInterval NullableInt64 `json:"renotify_interval,omitempty"`
+	// The number of times re-notification messages should be sent on the current status at the provided re-notification interval.
+	RenotifyOccurrences NullableInt64 `json:"renotify_occurrences,omitempty"`
+	// The types of monitor statuses for which re-notification messages are sent.
+	RenotifyStatuses []MonitorRenotifyStatusType `json:"renotify_statuses,omitempty"`
 	// A Boolean indicating whether this monitor needs a full window of data before it’s evaluated. We highly recommend you set this to `false` for sparse metrics, otherwise some evaluations are skipped. Default is false.
 	RequireFullWindow *bool `json:"require_full_window,omitempty"`
 	// Information about the downtime applied to the monitor.
+	// Deprecated
 	Silenced *map[string]int64 `json:"silenced,omitempty"`
 	// ID of the corresponding Synthetic check.
+	// Deprecated
 	SyntheticsCheckId NullableString                 `json:"synthetics_check_id,omitempty"`
 	ThresholdWindows  *MonitorThresholdWindowOptions `json:"threshold_windows,omitempty"`
 	Thresholds        *MonitorThresholds             `json:"thresholds,omitempty"`
 	// The number of hours of the monitor not reporting data before it automatically resolves from a triggered state.
 	TimeoutH NullableInt64 `json:"timeout_h,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewMonitorOptions instantiates a new MonitorOptions object
@@ -133,6 +145,7 @@ func (o *MonitorOptions) SetAggregation(v MonitorOptionsAggregation) {
 }
 
 // GetDeviceIds returns the DeviceIds field value if set, zero value otherwise.
+// Deprecated
 func (o *MonitorOptions) GetDeviceIds() []MonitorDeviceID {
 	if o == nil || o.DeviceIds == nil {
 		var ret []MonitorDeviceID
@@ -143,6 +156,7 @@ func (o *MonitorOptions) GetDeviceIds() []MonitorDeviceID {
 
 // GetDeviceIdsOk returns a tuple with the DeviceIds field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *MonitorOptions) GetDeviceIdsOk() (*[]MonitorDeviceID, bool) {
 	if o == nil || o.DeviceIds == nil {
 		return nil, false
@@ -160,6 +174,7 @@ func (o *MonitorOptions) HasDeviceIds() bool {
 }
 
 // SetDeviceIds gets a reference to the given []MonitorDeviceID and assigns it to the DeviceIds field.
+// Deprecated
 func (o *MonitorOptions) SetDeviceIds(v []MonitorDeviceID) {
 	o.DeviceIds = &v
 }
@@ -453,7 +468,51 @@ func (o *MonitorOptions) UnsetMinLocationFailed() {
 	o.MinLocationFailed.Unset()
 }
 
+// GetNewGroupDelay returns the NewGroupDelay field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *MonitorOptions) GetNewGroupDelay() int64 {
+	if o == nil || o.NewGroupDelay.Get() == nil {
+		var ret int64
+		return ret
+	}
+	return *o.NewGroupDelay.Get()
+}
+
+// GetNewGroupDelayOk returns a tuple with the NewGroupDelay field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *MonitorOptions) GetNewGroupDelayOk() (*int64, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.NewGroupDelay.Get(), o.NewGroupDelay.IsSet()
+}
+
+// HasNewGroupDelay returns a boolean if a field has been set.
+func (o *MonitorOptions) HasNewGroupDelay() bool {
+	if o != nil && o.NewGroupDelay.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetNewGroupDelay gets a reference to the given NullableInt64 and assigns it to the NewGroupDelay field.
+func (o *MonitorOptions) SetNewGroupDelay(v int64) {
+	o.NewGroupDelay.Set(&v)
+}
+
+// SetNewGroupDelayNil sets the value for NewGroupDelay to be an explicit nil
+func (o *MonitorOptions) SetNewGroupDelayNil() {
+	o.NewGroupDelay.Set(nil)
+}
+
+// UnsetNewGroupDelay ensures that no value is present for NewGroupDelay, not even an explicit nil
+func (o *MonitorOptions) UnsetNewGroupDelay() {
+	o.NewGroupDelay.Unset()
+}
+
 // GetNewHostDelay returns the NewHostDelay field value if set, zero value otherwise (both if not set or set to explicit null).
+// Deprecated
 func (o *MonitorOptions) GetNewHostDelay() int64 {
 	if o == nil || o.NewHostDelay.Get() == nil {
 		var ret int64
@@ -465,6 +524,7 @@ func (o *MonitorOptions) GetNewHostDelay() int64 {
 // GetNewHostDelayOk returns a tuple with the NewHostDelay field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
+// Deprecated
 func (o *MonitorOptions) GetNewHostDelayOk() (*int64, bool) {
 	if o == nil {
 		return nil, false
@@ -482,6 +542,7 @@ func (o *MonitorOptions) HasNewHostDelay() bool {
 }
 
 // SetNewHostDelay gets a reference to the given NullableInt64 and assigns it to the NewHostDelay field.
+// Deprecated
 func (o *MonitorOptions) SetNewHostDelay(v int64) {
 	o.NewHostDelay.Set(&v)
 }
@@ -646,6 +707,82 @@ func (o *MonitorOptions) UnsetRenotifyInterval() {
 	o.RenotifyInterval.Unset()
 }
 
+// GetRenotifyOccurrences returns the RenotifyOccurrences field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *MonitorOptions) GetRenotifyOccurrences() int64 {
+	if o == nil || o.RenotifyOccurrences.Get() == nil {
+		var ret int64
+		return ret
+	}
+	return *o.RenotifyOccurrences.Get()
+}
+
+// GetRenotifyOccurrencesOk returns a tuple with the RenotifyOccurrences field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *MonitorOptions) GetRenotifyOccurrencesOk() (*int64, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.RenotifyOccurrences.Get(), o.RenotifyOccurrences.IsSet()
+}
+
+// HasRenotifyOccurrences returns a boolean if a field has been set.
+func (o *MonitorOptions) HasRenotifyOccurrences() bool {
+	if o != nil && o.RenotifyOccurrences.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetRenotifyOccurrences gets a reference to the given NullableInt64 and assigns it to the RenotifyOccurrences field.
+func (o *MonitorOptions) SetRenotifyOccurrences(v int64) {
+	o.RenotifyOccurrences.Set(&v)
+}
+
+// SetRenotifyOccurrencesNil sets the value for RenotifyOccurrences to be an explicit nil
+func (o *MonitorOptions) SetRenotifyOccurrencesNil() {
+	o.RenotifyOccurrences.Set(nil)
+}
+
+// UnsetRenotifyOccurrences ensures that no value is present for RenotifyOccurrences, not even an explicit nil
+func (o *MonitorOptions) UnsetRenotifyOccurrences() {
+	o.RenotifyOccurrences.Unset()
+}
+
+// GetRenotifyStatuses returns the RenotifyStatuses field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *MonitorOptions) GetRenotifyStatuses() []MonitorRenotifyStatusType {
+	if o == nil {
+		var ret []MonitorRenotifyStatusType
+		return ret
+	}
+	return o.RenotifyStatuses
+}
+
+// GetRenotifyStatusesOk returns a tuple with the RenotifyStatuses field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *MonitorOptions) GetRenotifyStatusesOk() (*[]MonitorRenotifyStatusType, bool) {
+	if o == nil || o.RenotifyStatuses == nil {
+		return nil, false
+	}
+	return &o.RenotifyStatuses, true
+}
+
+// HasRenotifyStatuses returns a boolean if a field has been set.
+func (o *MonitorOptions) HasRenotifyStatuses() bool {
+	if o != nil && o.RenotifyStatuses != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetRenotifyStatuses gets a reference to the given []MonitorRenotifyStatusType and assigns it to the RenotifyStatuses field.
+func (o *MonitorOptions) SetRenotifyStatuses(v []MonitorRenotifyStatusType) {
+	o.RenotifyStatuses = v
+}
+
 // GetRequireFullWindow returns the RequireFullWindow field value if set, zero value otherwise.
 func (o *MonitorOptions) GetRequireFullWindow() bool {
 	if o == nil || o.RequireFullWindow == nil {
@@ -679,6 +816,7 @@ func (o *MonitorOptions) SetRequireFullWindow(v bool) {
 }
 
 // GetSilenced returns the Silenced field value if set, zero value otherwise.
+// Deprecated
 func (o *MonitorOptions) GetSilenced() map[string]int64 {
 	if o == nil || o.Silenced == nil {
 		var ret map[string]int64
@@ -689,6 +827,7 @@ func (o *MonitorOptions) GetSilenced() map[string]int64 {
 
 // GetSilencedOk returns a tuple with the Silenced field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *MonitorOptions) GetSilencedOk() (*map[string]int64, bool) {
 	if o == nil || o.Silenced == nil {
 		return nil, false
@@ -706,11 +845,13 @@ func (o *MonitorOptions) HasSilenced() bool {
 }
 
 // SetSilenced gets a reference to the given map[string]int64 and assigns it to the Silenced field.
+// Deprecated
 func (o *MonitorOptions) SetSilenced(v map[string]int64) {
 	o.Silenced = &v
 }
 
 // GetSyntheticsCheckId returns the SyntheticsCheckId field value if set, zero value otherwise (both if not set or set to explicit null).
+// Deprecated
 func (o *MonitorOptions) GetSyntheticsCheckId() string {
 	if o == nil || o.SyntheticsCheckId.Get() == nil {
 		var ret string
@@ -722,6 +863,7 @@ func (o *MonitorOptions) GetSyntheticsCheckId() string {
 // GetSyntheticsCheckIdOk returns a tuple with the SyntheticsCheckId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
+// Deprecated
 func (o *MonitorOptions) GetSyntheticsCheckIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
@@ -739,6 +881,7 @@ func (o *MonitorOptions) HasSyntheticsCheckId() bool {
 }
 
 // SetSyntheticsCheckId gets a reference to the given NullableString and assigns it to the SyntheticsCheckId field.
+// Deprecated
 func (o *MonitorOptions) SetSyntheticsCheckId(v string) {
 	o.SyntheticsCheckId.Set(&v)
 }
@@ -862,6 +1005,9 @@ func (o *MonitorOptions) UnsetTimeoutH() {
 
 func (o MonitorOptions) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Aggregation != nil {
 		toSerialize["aggregation"] = o.Aggregation
 	}
@@ -892,6 +1038,9 @@ func (o MonitorOptions) MarshalJSON() ([]byte, error) {
 	if o.MinLocationFailed.IsSet() {
 		toSerialize["min_location_failed"] = o.MinLocationFailed.Get()
 	}
+	if o.NewGroupDelay.IsSet() {
+		toSerialize["new_group_delay"] = o.NewGroupDelay.Get()
+	}
 	if o.NewHostDelay.IsSet() {
 		toSerialize["new_host_delay"] = o.NewHostDelay.Get()
 	}
@@ -906,6 +1055,12 @@ func (o MonitorOptions) MarshalJSON() ([]byte, error) {
 	}
 	if o.RenotifyInterval.IsSet() {
 		toSerialize["renotify_interval"] = o.RenotifyInterval.Get()
+	}
+	if o.RenotifyOccurrences.IsSet() {
+		toSerialize["renotify_occurrences"] = o.RenotifyOccurrences.Get()
+	}
+	if o.RenotifyStatuses != nil {
+		toSerialize["renotify_statuses"] = o.RenotifyStatuses
 	}
 	if o.RequireFullWindow != nil {
 		toSerialize["require_full_window"] = o.RequireFullWindow
@@ -926,6 +1081,70 @@ func (o MonitorOptions) MarshalJSON() ([]byte, error) {
 		toSerialize["timeout_h"] = o.TimeoutH.Get()
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *MonitorOptions) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Aggregation          *MonitorOptionsAggregation     `json:"aggregation,omitempty"`
+		DeviceIds            *[]MonitorDeviceID             `json:"device_ids,omitempty"`
+		EnableLogsSample     *bool                          `json:"enable_logs_sample,omitempty"`
+		EscalationMessage    *string                        `json:"escalation_message,omitempty"`
+		EvaluationDelay      NullableInt64                  `json:"evaluation_delay,omitempty"`
+		GroupbySimpleMonitor *bool                          `json:"groupby_simple_monitor,omitempty"`
+		IncludeTags          *bool                          `json:"include_tags,omitempty"`
+		Locked               *bool                          `json:"locked,omitempty"`
+		MinFailureDuration   NullableInt64                  `json:"min_failure_duration,omitempty"`
+		MinLocationFailed    NullableInt64                  `json:"min_location_failed,omitempty"`
+		NewGroupDelay        NullableInt64                  `json:"new_group_delay,omitempty"`
+		NewHostDelay         NullableInt64                  `json:"new_host_delay,omitempty"`
+		NoDataTimeframe      NullableInt64                  `json:"no_data_timeframe,omitempty"`
+		NotifyAudit          *bool                          `json:"notify_audit,omitempty"`
+		NotifyNoData         *bool                          `json:"notify_no_data,omitempty"`
+		RenotifyInterval     NullableInt64                  `json:"renotify_interval,omitempty"`
+		RenotifyOccurrences  NullableInt64                  `json:"renotify_occurrences,omitempty"`
+		RenotifyStatuses     []MonitorRenotifyStatusType    `json:"renotify_statuses,omitempty"`
+		RequireFullWindow    *bool                          `json:"require_full_window,omitempty"`
+		Silenced             *map[string]int64              `json:"silenced,omitempty"`
+		SyntheticsCheckId    NullableString                 `json:"synthetics_check_id,omitempty"`
+		ThresholdWindows     *MonitorThresholdWindowOptions `json:"threshold_windows,omitempty"`
+		Thresholds           *MonitorThresholds             `json:"thresholds,omitempty"`
+		TimeoutH             NullableInt64                  `json:"timeout_h,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Aggregation = all.Aggregation
+	o.DeviceIds = all.DeviceIds
+	o.EnableLogsSample = all.EnableLogsSample
+	o.EscalationMessage = all.EscalationMessage
+	o.EvaluationDelay = all.EvaluationDelay
+	o.GroupbySimpleMonitor = all.GroupbySimpleMonitor
+	o.IncludeTags = all.IncludeTags
+	o.Locked = all.Locked
+	o.MinFailureDuration = all.MinFailureDuration
+	o.MinLocationFailed = all.MinLocationFailed
+	o.NewGroupDelay = all.NewGroupDelay
+	o.NewHostDelay = all.NewHostDelay
+	o.NoDataTimeframe = all.NoDataTimeframe
+	o.NotifyAudit = all.NotifyAudit
+	o.NotifyNoData = all.NotifyNoData
+	o.RenotifyInterval = all.RenotifyInterval
+	o.RenotifyOccurrences = all.RenotifyOccurrences
+	o.RenotifyStatuses = all.RenotifyStatuses
+	o.RequireFullWindow = all.RequireFullWindow
+	o.Silenced = all.Silenced
+	o.SyntheticsCheckId = all.SyntheticsCheckId
+	o.ThresholdWindows = all.ThresholdWindows
+	o.Thresholds = all.Thresholds
+	o.TimeoutH = all.TimeoutH
+	return nil
 }
 
 type NullableMonitorOptions struct {

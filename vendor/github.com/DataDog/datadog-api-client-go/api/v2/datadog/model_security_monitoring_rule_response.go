@@ -40,11 +40,14 @@ type SecurityMonitoringRuleResponse struct {
 	// Queries for selecting logs which are part of the rule.
 	Queries *[]SecurityMonitoringRuleQuery `json:"queries,omitempty"`
 	// Tags for generated signals.
-	Tags *[]string `json:"tags,omitempty"`
+	Tags *[]string                       `json:"tags,omitempty"`
+	Type *SecurityMonitoringRuleTypeRead `json:"type,omitempty"`
 	// User ID of the user who updated the rule.
 	UpdateAuthorId *int64 `json:"updateAuthorId,omitempty"`
 	// The version of the rule.
 	Version *int64 `json:"version,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewSecurityMonitoringRuleResponse instantiates a new SecurityMonitoringRuleResponse object
@@ -512,6 +515,38 @@ func (o *SecurityMonitoringRuleResponse) SetTags(v []string) {
 	o.Tags = &v
 }
 
+// GetType returns the Type field value if set, zero value otherwise.
+func (o *SecurityMonitoringRuleResponse) GetType() SecurityMonitoringRuleTypeRead {
+	if o == nil || o.Type == nil {
+		var ret SecurityMonitoringRuleTypeRead
+		return ret
+	}
+	return *o.Type
+}
+
+// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SecurityMonitoringRuleResponse) GetTypeOk() (*SecurityMonitoringRuleTypeRead, bool) {
+	if o == nil || o.Type == nil {
+		return nil, false
+	}
+	return o.Type, true
+}
+
+// HasType returns a boolean if a field has been set.
+func (o *SecurityMonitoringRuleResponse) HasType() bool {
+	if o != nil && o.Type != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetType gets a reference to the given SecurityMonitoringRuleTypeRead and assigns it to the Type field.
+func (o *SecurityMonitoringRuleResponse) SetType(v SecurityMonitoringRuleTypeRead) {
+	o.Type = &v
+}
+
 // GetUpdateAuthorId returns the UpdateAuthorId field value if set, zero value otherwise.
 func (o *SecurityMonitoringRuleResponse) GetUpdateAuthorId() int64 {
 	if o == nil || o.UpdateAuthorId == nil {
@@ -578,6 +613,9 @@ func (o *SecurityMonitoringRuleResponse) SetVersion(v int64) {
 
 func (o SecurityMonitoringRuleResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Cases != nil {
 		toSerialize["cases"] = o.Cases
 	}
@@ -620,6 +658,9 @@ func (o SecurityMonitoringRuleResponse) MarshalJSON() ([]byte, error) {
 	if o.Tags != nil {
 		toSerialize["tags"] = o.Tags
 	}
+	if o.Type != nil {
+		toSerialize["type"] = o.Type
+	}
 	if o.UpdateAuthorId != nil {
 		toSerialize["updateAuthorId"] = o.UpdateAuthorId
 	}
@@ -627,6 +668,64 @@ func (o SecurityMonitoringRuleResponse) MarshalJSON() ([]byte, error) {
 		toSerialize["version"] = o.Version
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *SecurityMonitoringRuleResponse) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Cases            *[]SecurityMonitoringRuleCase   `json:"cases,omitempty"`
+		CreatedAt        *int64                          `json:"createdAt,omitempty"`
+		CreationAuthorId *int64                          `json:"creationAuthorId,omitempty"`
+		Filters          *[]SecurityMonitoringFilter     `json:"filters,omitempty"`
+		HasExtendedTitle *bool                           `json:"hasExtendedTitle,omitempty"`
+		Id               *string                         `json:"id,omitempty"`
+		IsDefault        *bool                           `json:"isDefault,omitempty"`
+		IsDeleted        *bool                           `json:"isDeleted,omitempty"`
+		IsEnabled        *bool                           `json:"isEnabled,omitempty"`
+		Message          *string                         `json:"message,omitempty"`
+		Name             *string                         `json:"name,omitempty"`
+		Options          *SecurityMonitoringRuleOptions  `json:"options,omitempty"`
+		Queries          *[]SecurityMonitoringRuleQuery  `json:"queries,omitempty"`
+		Tags             *[]string                       `json:"tags,omitempty"`
+		Type             *SecurityMonitoringRuleTypeRead `json:"type,omitempty"`
+		UpdateAuthorId   *int64                          `json:"updateAuthorId,omitempty"`
+		Version          *int64                          `json:"version,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Type; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Cases = all.Cases
+	o.CreatedAt = all.CreatedAt
+	o.CreationAuthorId = all.CreationAuthorId
+	o.Filters = all.Filters
+	o.HasExtendedTitle = all.HasExtendedTitle
+	o.Id = all.Id
+	o.IsDefault = all.IsDefault
+	o.IsDeleted = all.IsDeleted
+	o.IsEnabled = all.IsEnabled
+	o.Message = all.Message
+	o.Name = all.Name
+	o.Options = all.Options
+	o.Queries = all.Queries
+	o.Tags = all.Tags
+	o.Type = all.Type
+	o.UpdateAuthorId = all.UpdateAuthorId
+	o.Version = all.Version
+	return nil
 }
 
 type NullableSecurityMonitoringRuleResponse struct {

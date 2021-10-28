@@ -16,12 +16,14 @@ import (
 // DistributionWidgetDefinition The Distribution visualization is another way of showing metrics aggregated across one or several tags, such as hosts. Unlike the heat map, a distribution graph’s x-axis is quantity rather than time.
 type DistributionWidgetDefinition struct {
 	// (Deprecated) The widget legend was replaced by a tooltip and sidebar.
+	// Deprecated
 	LegendSize *string `json:"legend_size,omitempty"`
 	// List of markers.
 	Markers *[]WidgetMarker `json:"markers,omitempty"`
 	// Array of one request object to display in the widget.  See the dedicated [Request JSON schema documentation](https://docs.datadoghq.com/dashboards/graphing_json/request_json)  to learn how to build the `REQUEST_SCHEMA`.
 	Requests []DistributionWidgetRequest `json:"requests"`
 	// (Deprecated) The widget legend was replaced by a tooltip and sidebar.
+	// Deprecated
 	ShowLegend *bool       `json:"show_legend,omitempty"`
 	Time       *WidgetTime `json:"time,omitempty"`
 	// Title of the widget.
@@ -32,6 +34,8 @@ type DistributionWidgetDefinition struct {
 	Type      DistributionWidgetDefinitionType `json:"type"`
 	Xaxis     *DistributionWidgetXAxis         `json:"xaxis,omitempty"`
 	Yaxis     *DistributionWidgetYAxis         `json:"yaxis,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewDistributionWidgetDefinition instantiates a new DistributionWidgetDefinition object
@@ -56,6 +60,7 @@ func NewDistributionWidgetDefinitionWithDefaults() *DistributionWidgetDefinition
 }
 
 // GetLegendSize returns the LegendSize field value if set, zero value otherwise.
+// Deprecated
 func (o *DistributionWidgetDefinition) GetLegendSize() string {
 	if o == nil || o.LegendSize == nil {
 		var ret string
@@ -66,6 +71,7 @@ func (o *DistributionWidgetDefinition) GetLegendSize() string {
 
 // GetLegendSizeOk returns a tuple with the LegendSize field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *DistributionWidgetDefinition) GetLegendSizeOk() (*string, bool) {
 	if o == nil || o.LegendSize == nil {
 		return nil, false
@@ -83,6 +89,7 @@ func (o *DistributionWidgetDefinition) HasLegendSize() bool {
 }
 
 // SetLegendSize gets a reference to the given string and assigns it to the LegendSize field.
+// Deprecated
 func (o *DistributionWidgetDefinition) SetLegendSize(v string) {
 	o.LegendSize = &v
 }
@@ -144,6 +151,7 @@ func (o *DistributionWidgetDefinition) SetRequests(v []DistributionWidgetRequest
 }
 
 // GetShowLegend returns the ShowLegend field value if set, zero value otherwise.
+// Deprecated
 func (o *DistributionWidgetDefinition) GetShowLegend() bool {
 	if o == nil || o.ShowLegend == nil {
 		var ret bool
@@ -154,6 +162,7 @@ func (o *DistributionWidgetDefinition) GetShowLegend() bool {
 
 // GetShowLegendOk returns a tuple with the ShowLegend field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *DistributionWidgetDefinition) GetShowLegendOk() (*bool, bool) {
 	if o == nil || o.ShowLegend == nil {
 		return nil, false
@@ -171,6 +180,7 @@ func (o *DistributionWidgetDefinition) HasShowLegend() bool {
 }
 
 // SetShowLegend gets a reference to the given bool and assigns it to the ShowLegend field.
+// Deprecated
 func (o *DistributionWidgetDefinition) SetShowLegend(v bool) {
 	o.ShowLegend = &v
 }
@@ -393,6 +403,9 @@ func (o *DistributionWidgetDefinition) SetYaxis(v DistributionWidgetYAxis) {
 
 func (o DistributionWidgetDefinition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.LegendSize != nil {
 		toSerialize["legend_size"] = o.LegendSize
 	}
@@ -430,6 +443,7 @@ func (o DistributionWidgetDefinition) MarshalJSON() ([]byte, error) {
 }
 
 func (o *DistributionWidgetDefinition) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		Requests *[]DistributionWidgetRequest      `json:"requests"`
 		Type     *DistributionWidgetDefinitionType `json:"type"`
@@ -459,7 +473,28 @@ func (o *DistributionWidgetDefinition) UnmarshalJSON(bytes []byte) (err error) {
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.TitleAlign; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Type; !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.LegendSize = all.LegendSize
 	o.Markers = all.Markers

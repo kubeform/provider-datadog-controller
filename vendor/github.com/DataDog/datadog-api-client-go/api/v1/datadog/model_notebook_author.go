@@ -26,13 +26,15 @@ type NotebookAuthor struct {
 	// URL of the user's icon.
 	Icon *string `json:"icon,omitempty"`
 	// Name of the user.
-	Name *string `json:"name,omitempty"`
+	Name NullableString `json:"name,omitempty"`
 	// Status of the user.
 	Status *string `json:"status,omitempty"`
 	// Title of the user.
-	Title *string `json:"title,omitempty"`
+	Title NullableString `json:"title,omitempty"`
 	// Whether the user is verified.
 	Verified *bool `json:"verified,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewNotebookAuthor instantiates a new NotebookAuthor object
@@ -212,36 +214,47 @@ func (o *NotebookAuthor) SetIcon(v string) {
 	o.Icon = &v
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
+// GetName returns the Name field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *NotebookAuthor) GetName() string {
-	if o == nil || o.Name == nil {
+	if o == nil || o.Name.Get() == nil {
 		var ret string
 		return ret
 	}
-	return *o.Name
+	return *o.Name.Get()
 }
 
 // GetNameOk returns a tuple with the Name field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *NotebookAuthor) GetNameOk() (*string, bool) {
-	if o == nil || o.Name == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Name, true
+	return o.Name.Get(), o.Name.IsSet()
 }
 
 // HasName returns a boolean if a field has been set.
 func (o *NotebookAuthor) HasName() bool {
-	if o != nil && o.Name != nil {
+	if o != nil && o.Name.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetName gets a reference to the given string and assigns it to the Name field.
+// SetName gets a reference to the given NullableString and assigns it to the Name field.
 func (o *NotebookAuthor) SetName(v string) {
-	o.Name = &v
+	o.Name.Set(&v)
+}
+
+// SetNameNil sets the value for Name to be an explicit nil
+func (o *NotebookAuthor) SetNameNil() {
+	o.Name.Set(nil)
+}
+
+// UnsetName ensures that no value is present for Name, not even an explicit nil
+func (o *NotebookAuthor) UnsetName() {
+	o.Name.Unset()
 }
 
 // GetStatus returns the Status field value if set, zero value otherwise.
@@ -276,36 +289,47 @@ func (o *NotebookAuthor) SetStatus(v string) {
 	o.Status = &v
 }
 
-// GetTitle returns the Title field value if set, zero value otherwise.
+// GetTitle returns the Title field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *NotebookAuthor) GetTitle() string {
-	if o == nil || o.Title == nil {
+	if o == nil || o.Title.Get() == nil {
 		var ret string
 		return ret
 	}
-	return *o.Title
+	return *o.Title.Get()
 }
 
 // GetTitleOk returns a tuple with the Title field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *NotebookAuthor) GetTitleOk() (*string, bool) {
-	if o == nil || o.Title == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Title, true
+	return o.Title.Get(), o.Title.IsSet()
 }
 
 // HasTitle returns a boolean if a field has been set.
 func (o *NotebookAuthor) HasTitle() bool {
-	if o != nil && o.Title != nil {
+	if o != nil && o.Title.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetTitle gets a reference to the given string and assigns it to the Title field.
+// SetTitle gets a reference to the given NullableString and assigns it to the Title field.
 func (o *NotebookAuthor) SetTitle(v string) {
-	o.Title = &v
+	o.Title.Set(&v)
+}
+
+// SetTitleNil sets the value for Title to be an explicit nil
+func (o *NotebookAuthor) SetTitleNil() {
+	o.Title.Set(nil)
+}
+
+// UnsetTitle ensures that no value is present for Title, not even an explicit nil
+func (o *NotebookAuthor) UnsetTitle() {
+	o.Title.Unset()
 }
 
 // GetVerified returns the Verified field value if set, zero value otherwise.
@@ -342,6 +366,9 @@ func (o *NotebookAuthor) SetVerified(v bool) {
 
 func (o NotebookAuthor) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
 	}
@@ -357,19 +384,53 @@ func (o NotebookAuthor) MarshalJSON() ([]byte, error) {
 	if o.Icon != nil {
 		toSerialize["icon"] = o.Icon
 	}
-	if o.Name != nil {
-		toSerialize["name"] = o.Name
+	if o.Name.IsSet() {
+		toSerialize["name"] = o.Name.Get()
 	}
 	if o.Status != nil {
 		toSerialize["status"] = o.Status
 	}
-	if o.Title != nil {
-		toSerialize["title"] = o.Title
+	if o.Title.IsSet() {
+		toSerialize["title"] = o.Title.Get()
 	}
 	if o.Verified != nil {
 		toSerialize["verified"] = o.Verified
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *NotebookAuthor) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		CreatedAt *time.Time     `json:"created_at,omitempty"`
+		Disabled  *bool          `json:"disabled,omitempty"`
+		Email     *string        `json:"email,omitempty"`
+		Handle    *string        `json:"handle,omitempty"`
+		Icon      *string        `json:"icon,omitempty"`
+		Name      NullableString `json:"name,omitempty"`
+		Status    *string        `json:"status,omitempty"`
+		Title     NullableString `json:"title,omitempty"`
+		Verified  *bool          `json:"verified,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.CreatedAt = all.CreatedAt
+	o.Disabled = all.Disabled
+	o.Email = all.Email
+	o.Handle = all.Handle
+	o.Icon = all.Icon
+	o.Name = all.Name
+	o.Status = all.Status
+	o.Title = all.Title
+	o.Verified = all.Verified
+	return nil
 }
 
 type NullableNotebookAuthor struct {

@@ -17,6 +17,7 @@ import (
 type MonitorSummaryWidgetDefinition struct {
 	ColorPreference *WidgetColorPreference `json:"color_preference,omitempty"`
 	// The number of monitors to display.
+	// Deprecated
 	Count         *int64                             `json:"count,omitempty"`
 	DisplayFormat *WidgetMonitorSummaryDisplayFormat `json:"display_format,omitempty"`
 	// Whether to show counts of 0 or not.
@@ -27,6 +28,7 @@ type MonitorSummaryWidgetDefinition struct {
 	ShowLastTriggered *bool                     `json:"show_last_triggered,omitempty"`
 	Sort              *WidgetMonitorSummarySort `json:"sort,omitempty"`
 	// The start of the list. Typically 0.
+	// Deprecated
 	Start       *int64             `json:"start,omitempty"`
 	SummaryType *WidgetSummaryType `json:"summary_type,omitempty"`
 	// Title of the widget.
@@ -35,6 +37,8 @@ type MonitorSummaryWidgetDefinition struct {
 	// Size of the title.
 	TitleSize *string                            `json:"title_size,omitempty"`
 	Type      MonitorSummaryWidgetDefinitionType `json:"type"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewMonitorSummaryWidgetDefinition instantiates a new MonitorSummaryWidgetDefinition object
@@ -91,6 +95,7 @@ func (o *MonitorSummaryWidgetDefinition) SetColorPreference(v WidgetColorPrefere
 }
 
 // GetCount returns the Count field value if set, zero value otherwise.
+// Deprecated
 func (o *MonitorSummaryWidgetDefinition) GetCount() int64 {
 	if o == nil || o.Count == nil {
 		var ret int64
@@ -101,6 +106,7 @@ func (o *MonitorSummaryWidgetDefinition) GetCount() int64 {
 
 // GetCountOk returns a tuple with the Count field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *MonitorSummaryWidgetDefinition) GetCountOk() (*int64, bool) {
 	if o == nil || o.Count == nil {
 		return nil, false
@@ -118,6 +124,7 @@ func (o *MonitorSummaryWidgetDefinition) HasCount() bool {
 }
 
 // SetCount gets a reference to the given int64 and assigns it to the Count field.
+// Deprecated
 func (o *MonitorSummaryWidgetDefinition) SetCount(v int64) {
 	o.Count = &v
 }
@@ -275,6 +282,7 @@ func (o *MonitorSummaryWidgetDefinition) SetSort(v WidgetMonitorSummarySort) {
 }
 
 // GetStart returns the Start field value if set, zero value otherwise.
+// Deprecated
 func (o *MonitorSummaryWidgetDefinition) GetStart() int64 {
 	if o == nil || o.Start == nil {
 		var ret int64
@@ -285,6 +293,7 @@ func (o *MonitorSummaryWidgetDefinition) GetStart() int64 {
 
 // GetStartOk returns a tuple with the Start field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *MonitorSummaryWidgetDefinition) GetStartOk() (*int64, bool) {
 	if o == nil || o.Start == nil {
 		return nil, false
@@ -302,6 +311,7 @@ func (o *MonitorSummaryWidgetDefinition) HasStart() bool {
 }
 
 // SetStart gets a reference to the given int64 and assigns it to the Start field.
+// Deprecated
 func (o *MonitorSummaryWidgetDefinition) SetStart(v int64) {
 	o.Start = &v
 }
@@ -460,6 +470,9 @@ func (o *MonitorSummaryWidgetDefinition) SetType(v MonitorSummaryWidgetDefinitio
 
 func (o MonitorSummaryWidgetDefinition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.ColorPreference != nil {
 		toSerialize["color_preference"] = o.ColorPreference
 	}
@@ -503,6 +516,7 @@ func (o MonitorSummaryWidgetDefinition) MarshalJSON() ([]byte, error) {
 }
 
 func (o *MonitorSummaryWidgetDefinition) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		Query *string                             `json:"query"`
 		Type  *MonitorSummaryWidgetDefinitionType `json:"type"`
@@ -534,7 +548,60 @@ func (o *MonitorSummaryWidgetDefinition) UnmarshalJSON(bytes []byte) (err error)
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.ColorPreference; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.DisplayFormat; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Sort; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.SummaryType; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.TitleAlign; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Type; !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.ColorPreference = all.ColorPreference
 	o.Count = all.Count

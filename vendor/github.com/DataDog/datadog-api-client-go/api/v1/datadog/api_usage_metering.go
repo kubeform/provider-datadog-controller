@@ -1117,188 +1117,6 @@ func (a *UsageMeteringApiService) getSpecifiedMonthlyCustomReportsExecute(r apiG
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type apiGetTracingWithoutLimitsRequest struct {
-	ctx        _context.Context
-	ApiService *UsageMeteringApiService
-	startHr    *time.Time
-	endHr      *time.Time
-}
-
-type GetTracingWithoutLimitsOptionalParameters struct {
-	EndHr *time.Time
-}
-
-func NewGetTracingWithoutLimitsOptionalParameters() *GetTracingWithoutLimitsOptionalParameters {
-	this := GetTracingWithoutLimitsOptionalParameters{}
-	return &this
-}
-func (r *GetTracingWithoutLimitsOptionalParameters) WithEndHr(endHr time.Time) *GetTracingWithoutLimitsOptionalParameters {
-	r.EndHr = &endHr
-	return r
-}
-
-/*
- * GetTracingWithoutLimits Get hourly usage for tracing without limits
- * Get hourly usage for tracing without limits.
-
-**Note** This endpoint has been renamed to `/api/v1/usage/ingested-spans`.
-*/
-func (a *UsageMeteringApiService) GetTracingWithoutLimits(ctx _context.Context, startHr time.Time, o ...GetTracingWithoutLimitsOptionalParameters) (UsageTracingWithoutLimitsResponse, *_nethttp.Response, error) {
-	req := apiGetTracingWithoutLimitsRequest{
-		ApiService: a,
-		ctx:        ctx,
-		startHr:    &startHr,
-	}
-
-	if len(o) > 1 {
-		var localVarReturnValue UsageTracingWithoutLimitsResponse
-		return localVarReturnValue, nil, reportError("only one argument of type GetTracingWithoutLimitsOptionalParameters is allowed")
-	}
-
-	if o != nil {
-		req.endHr = o[0].EndHr
-	}
-
-	return req.ApiService.getTracingWithoutLimitsExecute(req)
-}
-
-/*
- * Execute executes the request
- * @return UsageTracingWithoutLimitsResponse
- */
-func (a *UsageMeteringApiService) getTracingWithoutLimitsExecute(r apiGetTracingWithoutLimitsRequest) (UsageTracingWithoutLimitsResponse, *_nethttp.Response, error) {
-	var (
-		localVarHTTPMethod   = _nethttp.MethodGet
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-		localVarReturnValue  UsageTracingWithoutLimitsResponse
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UsageMeteringApiService.GetTracingWithoutLimits")
-	if err != nil {
-		return localVarReturnValue, nil, GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/api/v1/usage/tracing-without-limits"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := _neturl.Values{}
-	localVarFormParams := _neturl.Values{}
-	if r.startHr == nil {
-		return localVarReturnValue, nil, reportError("startHr is required and must be specified")
-	}
-
-	localVarQueryParams.Add("start_hr", parameterToString(*r.startHr, ""))
-	if r.endHr != nil {
-		localVarQueryParams.Add("end_hr", parameterToString(*r.endHr, ""))
-	}
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json;datetime-format=rfc3339"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-
-	// Set Operation-ID header for telemetry
-	localVarHeaderParams["DD-OPERATION-ID"] = "GetTracingWithoutLimits"
-
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["apiKeyAuth"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["DD-API-KEY"] = key
-			}
-		}
-	}
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["appKeyAuth"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["DD-APPLICATION-KEY"] = key
-			}
-		}
-	}
-	req, err := a.client.PrepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.CallAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v APIErrorResponse
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 403 {
-			var v APIErrorResponse
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
 type apiGetUsageAnalyzedLogsRequest struct {
 	ctx        _context.Context
 	ApiService *UsageMeteringApiService
@@ -1480,19 +1298,21 @@ func (a *UsageMeteringApiService) getUsageAnalyzedLogsExecute(r apiGetUsageAnaly
 }
 
 type apiGetUsageAttributionRequest struct {
-	ctx           _context.Context
-	ApiService    *UsageMeteringApiService
-	startMonth    *time.Time
-	fields        *UsageAttributionSupportedMetrics
-	endMonth      *time.Time
-	sortDirection *UsageSortDirection
-	sortName      *UsageAttributionSort
+	ctx                _context.Context
+	ApiService         *UsageMeteringApiService
+	startMonth         *time.Time
+	fields             *UsageAttributionSupportedMetrics
+	endMonth           *time.Time
+	sortDirection      *UsageSortDirection
+	sortName           *UsageAttributionSort
+	includeDescendants *bool
 }
 
 type GetUsageAttributionOptionalParameters struct {
-	EndMonth      *time.Time
-	SortDirection *UsageSortDirection
-	SortName      *UsageAttributionSort
+	EndMonth           *time.Time
+	SortDirection      *UsageSortDirection
+	SortName           *UsageAttributionSort
+	IncludeDescendants *bool
 }
 
 func NewGetUsageAttributionOptionalParameters() *GetUsageAttributionOptionalParameters {
@@ -1509,6 +1329,10 @@ func (r *GetUsageAttributionOptionalParameters) WithSortDirection(sortDirection 
 }
 func (r *GetUsageAttributionOptionalParameters) WithSortName(sortName UsageAttributionSort) *GetUsageAttributionOptionalParameters {
 	r.SortName = &sortName
+	return r
+}
+func (r *GetUsageAttributionOptionalParameters) WithIncludeDescendants(includeDescendants bool) *GetUsageAttributionOptionalParameters {
+	r.IncludeDescendants = &includeDescendants
 	return r
 }
 
@@ -1533,6 +1357,7 @@ func (a *UsageMeteringApiService) GetUsageAttribution(ctx _context.Context, star
 		req.endMonth = o[0].EndMonth
 		req.sortDirection = o[0].SortDirection
 		req.sortName = o[0].SortName
+		req.includeDescendants = o[0].IncludeDescendants
 	}
 
 	return req.ApiService.getUsageAttributionExecute(req)
@@ -1586,6 +1411,9 @@ func (a *UsageMeteringApiService) getUsageAttributionExecute(r apiGetUsageAttrib
 	}
 	if r.sortName != nil {
 		localVarQueryParams.Add("sort_name", parameterToString(*r.sortName, ""))
+	}
+	if r.includeDescendants != nil {
+		localVarQueryParams.Add("include_descendants", parameterToString(*r.includeDescendants, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2311,6 +2139,186 @@ func (a *UsageMeteringApiService) getUsageCloudSecurityPostureManagementExecute(
 
 	// Set Operation-ID header for telemetry
 	localVarHeaderParams["DD-OPERATION-ID"] = "GetUsageCloudSecurityPostureManagement"
+
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["apiKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["DD-API-KEY"] = key
+			}
+		}
+	}
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["appKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["DD-APPLICATION-KEY"] = key
+			}
+		}
+	}
+	req, err := a.client.PrepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.CallAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type apiGetUsageDBMRequest struct {
+	ctx        _context.Context
+	ApiService *UsageMeteringApiService
+	startHr    *time.Time
+	endHr      *time.Time
+}
+
+type GetUsageDBMOptionalParameters struct {
+	EndHr *time.Time
+}
+
+func NewGetUsageDBMOptionalParameters() *GetUsageDBMOptionalParameters {
+	this := GetUsageDBMOptionalParameters{}
+	return &this
+}
+func (r *GetUsageDBMOptionalParameters) WithEndHr(endHr time.Time) *GetUsageDBMOptionalParameters {
+	r.EndHr = &endHr
+	return r
+}
+
+/*
+ * GetUsageDBM Get hourly usage for Database Monitoring
+ * Get hourly usage for Database Monitoring
+ */
+func (a *UsageMeteringApiService) GetUsageDBM(ctx _context.Context, startHr time.Time, o ...GetUsageDBMOptionalParameters) (UsageDBMResponse, *_nethttp.Response, error) {
+	req := apiGetUsageDBMRequest{
+		ApiService: a,
+		ctx:        ctx,
+		startHr:    &startHr,
+	}
+
+	if len(o) > 1 {
+		var localVarReturnValue UsageDBMResponse
+		return localVarReturnValue, nil, reportError("only one argument of type GetUsageDBMOptionalParameters is allowed")
+	}
+
+	if o != nil {
+		req.endHr = o[0].EndHr
+	}
+
+	return req.ApiService.getUsageDBMExecute(req)
+}
+
+/*
+ * Execute executes the request
+ * @return UsageDBMResponse
+ */
+func (a *UsageMeteringApiService) getUsageDBMExecute(r apiGetUsageDBMRequest) (UsageDBMResponse, *_nethttp.Response, error) {
+	var (
+		localVarHTTPMethod   = _nethttp.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  UsageDBMResponse
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UsageMeteringApiService.GetUsageDBM")
+	if err != nil {
+		return localVarReturnValue, nil, GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/api/v1/usage/dbm"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := _neturl.Values{}
+	localVarFormParams := _neturl.Values{}
+	if r.startHr == nil {
+		return localVarReturnValue, nil, reportError("startHr is required and must be specified")
+	}
+
+	localVarQueryParams.Add("start_hr", parameterToString(*r.startHr, ""))
+	if r.endHr != nil {
+		localVarQueryParams.Add("end_hr", parameterToString(*r.endHr, ""))
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json;datetime-format=rfc3339"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	// Set Operation-ID header for telemetry
+	localVarHeaderParams["DD-OPERATION-ID"] = "GetUsageDBM"
 
 	if r.ctx != nil {
 		// API Key Authentication
@@ -4584,6 +4592,186 @@ func (a *UsageMeteringApiService) getUsageRumSessionsExecute(r apiGetUsageRumSes
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
+type apiGetUsageSDSRequest struct {
+	ctx        _context.Context
+	ApiService *UsageMeteringApiService
+	startHr    *time.Time
+	endHr      *time.Time
+}
+
+type GetUsageSDSOptionalParameters struct {
+	EndHr *time.Time
+}
+
+func NewGetUsageSDSOptionalParameters() *GetUsageSDSOptionalParameters {
+	this := GetUsageSDSOptionalParameters{}
+	return &this
+}
+func (r *GetUsageSDSOptionalParameters) WithEndHr(endHr time.Time) *GetUsageSDSOptionalParameters {
+	r.EndHr = &endHr
+	return r
+}
+
+/*
+ * GetUsageSDS Get hourly usage for Sensitive Data Scanner
+ * Get hourly usage for Sensitive Data Scanner.
+ */
+func (a *UsageMeteringApiService) GetUsageSDS(ctx _context.Context, startHr time.Time, o ...GetUsageSDSOptionalParameters) (UsageSDSResponse, *_nethttp.Response, error) {
+	req := apiGetUsageSDSRequest{
+		ApiService: a,
+		ctx:        ctx,
+		startHr:    &startHr,
+	}
+
+	if len(o) > 1 {
+		var localVarReturnValue UsageSDSResponse
+		return localVarReturnValue, nil, reportError("only one argument of type GetUsageSDSOptionalParameters is allowed")
+	}
+
+	if o != nil {
+		req.endHr = o[0].EndHr
+	}
+
+	return req.ApiService.getUsageSDSExecute(req)
+}
+
+/*
+ * Execute executes the request
+ * @return UsageSDSResponse
+ */
+func (a *UsageMeteringApiService) getUsageSDSExecute(r apiGetUsageSDSRequest) (UsageSDSResponse, *_nethttp.Response, error) {
+	var (
+		localVarHTTPMethod   = _nethttp.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  UsageSDSResponse
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UsageMeteringApiService.GetUsageSDS")
+	if err != nil {
+		return localVarReturnValue, nil, GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/api/v1/usage/sds"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := _neturl.Values{}
+	localVarFormParams := _neturl.Values{}
+	if r.startHr == nil {
+		return localVarReturnValue, nil, reportError("startHr is required and must be specified")
+	}
+
+	localVarQueryParams.Add("start_hr", parameterToString(*r.startHr, ""))
+	if r.endHr != nil {
+		localVarQueryParams.Add("end_hr", parameterToString(*r.endHr, ""))
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json;datetime-format=rfc3339"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+
+	// Set Operation-ID header for telemetry
+	localVarHeaderParams["DD-OPERATION-ID"] = "GetUsageSDS"
+
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["apiKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["DD-API-KEY"] = key
+			}
+		}
+	}
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["appKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["DD-APPLICATION-KEY"] = key
+			}
+		}
+	}
+	req, err := a.client.PrepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.CallAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type apiGetUsageSNMPRequest struct {
 	ctx        _context.Context
 	ApiService *UsageMeteringApiService
@@ -5811,188 +5999,6 @@ func (a *UsageMeteringApiService) getUsageTopAvgMetricsExecute(r apiGetUsageTopA
 
 	// Set Operation-ID header for telemetry
 	localVarHeaderParams["DD-OPERATION-ID"] = "GetUsageTopAvgMetrics"
-
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["apiKeyAuth"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["DD-API-KEY"] = key
-			}
-		}
-	}
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["appKeyAuth"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["DD-APPLICATION-KEY"] = key
-			}
-		}
-	}
-	req, err := a.client.PrepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.CallAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := _ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = _ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v APIErrorResponse
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 403 {
-			var v APIErrorResponse
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
-type apiGetUsageTraceRequest struct {
-	ctx        _context.Context
-	ApiService *UsageMeteringApiService
-	startHr    *time.Time
-	endHr      *time.Time
-}
-
-type GetUsageTraceOptionalParameters struct {
-	EndHr *time.Time
-}
-
-func NewGetUsageTraceOptionalParameters() *GetUsageTraceOptionalParameters {
-	this := GetUsageTraceOptionalParameters{}
-	return &this
-}
-func (r *GetUsageTraceOptionalParameters) WithEndHr(endHr time.Time) *GetUsageTraceOptionalParameters {
-	r.EndHr = &endHr
-	return r
-}
-
-/*
- * GetUsageTrace Get hourly usage for Trace Search
- * Get hourly usage for trace search.
-
-**Note** This endpoint has been renamed to `/api/v1/usage/indexed-spans`.
-*/
-func (a *UsageMeteringApiService) GetUsageTrace(ctx _context.Context, startHr time.Time, o ...GetUsageTraceOptionalParameters) (UsageTraceResponse, *_nethttp.Response, error) {
-	req := apiGetUsageTraceRequest{
-		ApiService: a,
-		ctx:        ctx,
-		startHr:    &startHr,
-	}
-
-	if len(o) > 1 {
-		var localVarReturnValue UsageTraceResponse
-		return localVarReturnValue, nil, reportError("only one argument of type GetUsageTraceOptionalParameters is allowed")
-	}
-
-	if o != nil {
-		req.endHr = o[0].EndHr
-	}
-
-	return req.ApiService.getUsageTraceExecute(req)
-}
-
-/*
- * Execute executes the request
- * @return UsageTraceResponse
- */
-func (a *UsageMeteringApiService) getUsageTraceExecute(r apiGetUsageTraceRequest) (UsageTraceResponse, *_nethttp.Response, error) {
-	var (
-		localVarHTTPMethod   = _nethttp.MethodGet
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-		localVarReturnValue  UsageTraceResponse
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UsageMeteringApiService.GetUsageTrace")
-	if err != nil {
-		return localVarReturnValue, nil, GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/api/v1/usage/traces"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := _neturl.Values{}
-	localVarFormParams := _neturl.Values{}
-	if r.startHr == nil {
-		return localVarReturnValue, nil, reportError("startHr is required and must be specified")
-	}
-
-	localVarQueryParams.Add("start_hr", parameterToString(*r.startHr, ""))
-	if r.endHr != nil {
-		localVarQueryParams.Add("end_hr", parameterToString(*r.endHr, ""))
-	}
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json;datetime-format=rfc3339"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-
-	// Set Operation-ID header for telemetry
-	localVarHeaderParams["DD-OPERATION-ID"] = "GetUsageTrace"
 
 	if r.ctx != nil {
 		// API Key Authentication

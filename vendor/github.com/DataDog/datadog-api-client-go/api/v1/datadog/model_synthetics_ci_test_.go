@@ -31,8 +31,8 @@ type SyntheticsCITest struct {
 	// Headers to include when performing the test.
 	Headers *map[string]string `json:"headers,omitempty"`
 	// Array of locations used to run the test.
-	Locations *[]string                 `json:"locations,omitempty"`
-	Metadata  *SyntheticsCITestMetadata `json:"metadata,omitempty"`
+	Locations *[]string                  `json:"locations,omitempty"`
+	Metadata  *SyntheticsCIBatchMetadata `json:"metadata,omitempty"`
 	// The public ID of the Synthetics test to trigger.
 	PublicId string                      `json:"public_id"`
 	Retry    *SyntheticsTestOptionsRetry `json:"retry,omitempty"`
@@ -40,6 +40,8 @@ type SyntheticsCITest struct {
 	StartUrl *string `json:"startUrl,omitempty"`
 	// Variables to replace in the test.
 	Variables *map[string]string `json:"variables,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewSyntheticsCITest instantiates a new SyntheticsCITest object
@@ -349,9 +351,9 @@ func (o *SyntheticsCITest) SetLocations(v []string) {
 }
 
 // GetMetadata returns the Metadata field value if set, zero value otherwise.
-func (o *SyntheticsCITest) GetMetadata() SyntheticsCITestMetadata {
+func (o *SyntheticsCITest) GetMetadata() SyntheticsCIBatchMetadata {
 	if o == nil || o.Metadata == nil {
-		var ret SyntheticsCITestMetadata
+		var ret SyntheticsCIBatchMetadata
 		return ret
 	}
 	return *o.Metadata
@@ -359,7 +361,7 @@ func (o *SyntheticsCITest) GetMetadata() SyntheticsCITestMetadata {
 
 // GetMetadataOk returns a tuple with the Metadata field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SyntheticsCITest) GetMetadataOk() (*SyntheticsCITestMetadata, bool) {
+func (o *SyntheticsCITest) GetMetadataOk() (*SyntheticsCIBatchMetadata, bool) {
 	if o == nil || o.Metadata == nil {
 		return nil, false
 	}
@@ -375,8 +377,8 @@ func (o *SyntheticsCITest) HasMetadata() bool {
 	return false
 }
 
-// SetMetadata gets a reference to the given SyntheticsCITestMetadata and assigns it to the Metadata field.
-func (o *SyntheticsCITest) SetMetadata(v SyntheticsCITestMetadata) {
+// SetMetadata gets a reference to the given SyntheticsCIBatchMetadata and assigns it to the Metadata field.
+func (o *SyntheticsCITest) SetMetadata(v SyntheticsCIBatchMetadata) {
 	o.Metadata = &v
 }
 
@@ -502,6 +504,9 @@ func (o *SyntheticsCITest) SetVariables(v map[string]string) {
 
 func (o SyntheticsCITest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.AllowInsecureCertificates != nil {
 		toSerialize["allowInsecureCertificates"] = o.AllowInsecureCertificates
 	}
@@ -548,6 +553,7 @@ func (o SyntheticsCITest) MarshalJSON() ([]byte, error) {
 }
 
 func (o *SyntheticsCITest) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		PublicId *string `json:"public_id"`
 	}{}
@@ -561,7 +567,7 @@ func (o *SyntheticsCITest) UnmarshalJSON(bytes []byte) (err error) {
 		FollowRedirects           *bool                       `json:"followRedirects,omitempty"`
 		Headers                   *map[string]string          `json:"headers,omitempty"`
 		Locations                 *[]string                   `json:"locations,omitempty"`
-		Metadata                  *SyntheticsCITestMetadata   `json:"metadata,omitempty"`
+		Metadata                  *SyntheticsCIBatchMetadata  `json:"metadata,omitempty"`
 		PublicId                  string                      `json:"public_id"`
 		Retry                     *SyntheticsTestOptionsRetry `json:"retry,omitempty"`
 		StartUrl                  *string                     `json:"startUrl,omitempty"`
@@ -576,7 +582,12 @@ func (o *SyntheticsCITest) UnmarshalJSON(bytes []byte) (err error) {
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.AllowInsecureCertificates = all.AllowInsecureCertificates
 	o.BasicAuth = all.BasicAuth

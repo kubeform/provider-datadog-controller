@@ -16,11 +16,14 @@ import (
 // NotebookCreateDataAttributes The data attributes of a notebook.
 type NotebookCreateDataAttributes struct {
 	// List of cells to display in the notebook.
-	Cells []NotebookCellCreateRequest `json:"cells"`
+	Cells    []NotebookCellCreateRequest `json:"cells"`
+	Metadata *NotebookMetadata           `json:"metadata,omitempty"`
 	// The name of the notebook.
 	Name   string             `json:"name"`
 	Status *NotebookStatus    `json:"status,omitempty"`
 	Time   NotebookGlobalTime `json:"time"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewNotebookCreateDataAttributes instantiates a new NotebookCreateDataAttributes object
@@ -69,6 +72,38 @@ func (o *NotebookCreateDataAttributes) GetCellsOk() (*[]NotebookCellCreateReques
 // SetCells sets field value
 func (o *NotebookCreateDataAttributes) SetCells(v []NotebookCellCreateRequest) {
 	o.Cells = v
+}
+
+// GetMetadata returns the Metadata field value if set, zero value otherwise.
+func (o *NotebookCreateDataAttributes) GetMetadata() NotebookMetadata {
+	if o == nil || o.Metadata == nil {
+		var ret NotebookMetadata
+		return ret
+	}
+	return *o.Metadata
+}
+
+// GetMetadataOk returns a tuple with the Metadata field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *NotebookCreateDataAttributes) GetMetadataOk() (*NotebookMetadata, bool) {
+	if o == nil || o.Metadata == nil {
+		return nil, false
+	}
+	return o.Metadata, true
+}
+
+// HasMetadata returns a boolean if a field has been set.
+func (o *NotebookCreateDataAttributes) HasMetadata() bool {
+	if o != nil && o.Metadata != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadata gets a reference to the given NotebookMetadata and assigns it to the Metadata field.
+func (o *NotebookCreateDataAttributes) SetMetadata(v NotebookMetadata) {
+	o.Metadata = &v
 }
 
 // GetName returns the Name field value
@@ -153,8 +188,14 @@ func (o *NotebookCreateDataAttributes) SetTime(v NotebookGlobalTime) {
 
 func (o NotebookCreateDataAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if true {
 		toSerialize["cells"] = o.Cells
+	}
+	if o.Metadata != nil {
+		toSerialize["metadata"] = o.Metadata
 	}
 	if true {
 		toSerialize["name"] = o.Name
@@ -169,16 +210,18 @@ func (o NotebookCreateDataAttributes) MarshalJSON() ([]byte, error) {
 }
 
 func (o *NotebookCreateDataAttributes) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		Cells *[]NotebookCellCreateRequest `json:"cells"`
 		Name  *string                      `json:"name"`
 		Time  *NotebookGlobalTime          `json:"time"`
 	}{}
 	all := struct {
-		Cells  []NotebookCellCreateRequest `json:"cells"`
-		Name   string                      `json:"name"`
-		Status *NotebookStatus             `json:"status,omitempty"`
-		Time   NotebookGlobalTime          `json:"time"`
+		Cells    []NotebookCellCreateRequest `json:"cells"`
+		Metadata *NotebookMetadata           `json:"metadata,omitempty"`
+		Name     string                      `json:"name"`
+		Status   *NotebookStatus             `json:"status,omitempty"`
+		Time     NotebookGlobalTime          `json:"time"`
 	}{}
 	err = json.Unmarshal(bytes, &required)
 	if err != nil {
@@ -195,9 +238,23 @@ func (o *NotebookCreateDataAttributes) UnmarshalJSON(bytes []byte) (err error) {
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Status; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.Cells = all.Cells
+	o.Metadata = all.Metadata
 	o.Name = all.Name
 	o.Status = all.Status
 	o.Time = all.Time

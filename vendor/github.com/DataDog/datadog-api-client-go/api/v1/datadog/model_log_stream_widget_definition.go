@@ -20,6 +20,7 @@ type LogStreamWidgetDefinition struct {
 	// An array of index names to query in the stream. Use [] to query all indexes at once.
 	Indexes *[]string `json:"indexes,omitempty"`
 	// ID of the log set to use.
+	// Deprecated
 	Logset         *string               `json:"logset,omitempty"`
 	MessageDisplay *WidgetMessageDisplay `json:"message_display,omitempty"`
 	// Query to filter the log stream with.
@@ -36,6 +37,8 @@ type LogStreamWidgetDefinition struct {
 	// Size of the title.
 	TitleSize *string                       `json:"title_size,omitempty"`
 	Type      LogStreamWidgetDefinitionType `json:"type"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewLogStreamWidgetDefinition instantiates a new LogStreamWidgetDefinition object
@@ -123,6 +126,7 @@ func (o *LogStreamWidgetDefinition) SetIndexes(v []string) {
 }
 
 // GetLogset returns the Logset field value if set, zero value otherwise.
+// Deprecated
 func (o *LogStreamWidgetDefinition) GetLogset() string {
 	if o == nil || o.Logset == nil {
 		var ret string
@@ -133,6 +137,7 @@ func (o *LogStreamWidgetDefinition) GetLogset() string {
 
 // GetLogsetOk returns a tuple with the Logset field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *LogStreamWidgetDefinition) GetLogsetOk() (*string, bool) {
 	if o == nil || o.Logset == nil {
 		return nil, false
@@ -150,6 +155,7 @@ func (o *LogStreamWidgetDefinition) HasLogset() bool {
 }
 
 // SetLogset gets a reference to the given string and assigns it to the Logset field.
+// Deprecated
 func (o *LogStreamWidgetDefinition) SetLogset(v string) {
 	o.Logset = &v
 }
@@ -468,6 +474,9 @@ func (o *LogStreamWidgetDefinition) SetType(v LogStreamWidgetDefinitionType) {
 
 func (o LogStreamWidgetDefinition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Columns != nil {
 		toSerialize["columns"] = o.Columns
 	}
@@ -511,6 +520,7 @@ func (o LogStreamWidgetDefinition) MarshalJSON() ([]byte, error) {
 }
 
 func (o *LogStreamWidgetDefinition) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		Type *LogStreamWidgetDefinitionType `json:"type"`
 	}{}
@@ -538,7 +548,36 @@ func (o *LogStreamWidgetDefinition) UnmarshalJSON(bytes []byte) (err error) {
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.MessageDisplay; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.TitleAlign; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Type; !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.Columns = all.Columns
 	o.Indexes = all.Indexes

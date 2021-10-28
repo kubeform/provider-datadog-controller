@@ -57,7 +57,9 @@ func resourceDatadogDashboardJSON() *schema.Resource {
 						delete(attrMap, f)
 					}
 					// Remove every widget id too
-					deleteWidgetID(attrMap["widgets"].([]interface{}))
+					if widgets, ok := attrMap["widgets"].([]interface{}); ok {
+						deleteWidgetID(widgets)
+					}
 					res, _ := structure.FlattenJsonToString(attrMap)
 					return res
 				},
@@ -150,7 +152,7 @@ func resourceDatadogDashboardJSONCreate(ctx context.Context, d *schema.ResourceD
 
 	var httpResponse *http.Response
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, httpResponse, err = datadogClientV1.DashboardsApi.GetDashboard(authV1, id.(string))
+		_, httpResponse, err = utils.SendRequest(authV1, datadogClientV1, "GET", path+"/"+id.(string), nil)
 		if err != nil {
 			if httpResponse != nil && httpResponse.StatusCode == 404 {
 				return resource.RetryableError(fmt.Errorf("dashboard not created yet"))

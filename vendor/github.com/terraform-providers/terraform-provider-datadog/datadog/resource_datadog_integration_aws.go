@@ -149,9 +149,11 @@ func resourceDatadogIntegrationAwsCreate(ctx context.Context, d *schema.Resource
 
 	iaws := buildDatadogIntegrationAwsStruct(d)
 	response, httpresp, err := datadogClientV1.AWSIntegrationApi.CreateAWSAccount(authV1, *iaws)
-
 	if err != nil {
 		return utils.TranslateClientErrorDiag(err, httpresp, "error creating AWS integration")
+	}
+	if err := utils.CheckForUnparsed(response); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if v, ok := d.GetOk("access_key_id"); ok {
@@ -191,6 +193,9 @@ func resourceDatadogIntegrationAwsRead(ctx context.Context, d *schema.ResourceDa
 			return nil
 		}
 		return utils.TranslateClientErrorDiag(err, httpresp, "error getting AWS integration")
+	}
+	if err := utils.CheckForUnparsed(integrations); err != nil {
+		return diag.FromErr(err)
 	}
 
 	for _, integration := range integrations.GetAccounts() {
@@ -252,6 +257,22 @@ func resourceDatadogIntegrationAwsUpdate(ctx context.Context, d *schema.Resource
 	return resourceDatadogIntegrationAwsRead(ctx, d, meta)
 }
 
+func buildDatadogIntegrationAwsDeleteStruct(d *schema.ResourceData) *datadogV1.AWSAccountDeleteRequest {
+	awsDeleteRequest := datadogV1.NewAWSAccountDeleteRequest()
+
+	if v, ok := d.GetOk("account_id"); ok {
+		awsDeleteRequest.SetAccountId(v.(string))
+	}
+	if v, ok := d.GetOk("role_name"); ok {
+		awsDeleteRequest.SetRoleName(v.(string))
+	}
+	if v, ok := d.GetOk("access_key_id"); ok {
+		awsDeleteRequest.SetAccessKeyId(v.(string))
+	}
+
+	return awsDeleteRequest
+}
+
 func resourceDatadogIntegrationAwsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	providerConf := meta.(*ProviderConfiguration)
 	datadogClientV1 := providerConf.DatadogClientV1
@@ -259,7 +280,7 @@ func resourceDatadogIntegrationAwsDelete(ctx context.Context, d *schema.Resource
 	integrationAwsMutex.Lock()
 	defer integrationAwsMutex.Unlock()
 
-	iaws := buildDatadogIntegrationAwsStruct(d)
+	iaws := buildDatadogIntegrationAwsDeleteStruct(d)
 
 	_, httpresp, err := datadogClientV1.AWSIntegrationApi.DeleteAWSAccount(authV1, *iaws)
 	if err != nil {

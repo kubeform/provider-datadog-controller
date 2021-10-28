@@ -39,30 +39,40 @@ import (
 	admissionregistrationv1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
+	apikeyv1alpha1 "kubeform.dev/provider-datadog-api/apis/apikey/v1alpha1"
+	applicationv1alpha1 "kubeform.dev/provider-datadog-api/apis/application/v1alpha1"
+	childv1alpha1 "kubeform.dev/provider-datadog-api/apis/child/v1alpha1"
 	dashboardv1alpha1 "kubeform.dev/provider-datadog-api/apis/dashboard/v1alpha1"
 	downtimev1alpha1 "kubeform.dev/provider-datadog-api/apis/downtime/v1alpha1"
 	integrationv1alpha1 "kubeform.dev/provider-datadog-api/apis/integration/v1alpha1"
 	logsv1alpha1 "kubeform.dev/provider-datadog-api/apis/logs/v1alpha1"
 	metricv1alpha1 "kubeform.dev/provider-datadog-api/apis/metric/v1alpha1"
 	monitorv1alpha1 "kubeform.dev/provider-datadog-api/apis/monitor/v1alpha1"
+	organizationv1alpha1 "kubeform.dev/provider-datadog-api/apis/organization/v1alpha1"
 	rolev1alpha1 "kubeform.dev/provider-datadog-api/apis/role/v1alpha1"
 	securityv1alpha1 "kubeform.dev/provider-datadog-api/apis/security/v1alpha1"
 	servicev1alpha1 "kubeform.dev/provider-datadog-api/apis/service/v1alpha1"
 	slov1alpha1 "kubeform.dev/provider-datadog-api/apis/slo/v1alpha1"
 	syntheticsv1alpha1 "kubeform.dev/provider-datadog-api/apis/synthetics/v1alpha1"
 	userv1alpha1 "kubeform.dev/provider-datadog-api/apis/user/v1alpha1"
+	webhookv1alpha1 "kubeform.dev/provider-datadog-api/apis/webhook/v1alpha1"
+	controllersapikey "kubeform.dev/provider-datadog-controller/controllers/apikey"
+	controllersapplication "kubeform.dev/provider-datadog-controller/controllers/application"
+	controllerschild "kubeform.dev/provider-datadog-controller/controllers/child"
 	controllersdashboard "kubeform.dev/provider-datadog-controller/controllers/dashboard"
 	controllersdowntime "kubeform.dev/provider-datadog-controller/controllers/downtime"
 	controllersintegration "kubeform.dev/provider-datadog-controller/controllers/integration"
 	controllerslogs "kubeform.dev/provider-datadog-controller/controllers/logs"
 	controllersmetric "kubeform.dev/provider-datadog-controller/controllers/metric"
 	controllersmonitor "kubeform.dev/provider-datadog-controller/controllers/monitor"
+	controllersorganization "kubeform.dev/provider-datadog-controller/controllers/organization"
 	controllersrole "kubeform.dev/provider-datadog-controller/controllers/role"
 	controllerssecurity "kubeform.dev/provider-datadog-controller/controllers/security"
 	controllersservice "kubeform.dev/provider-datadog-controller/controllers/service"
 	controllersslo "kubeform.dev/provider-datadog-controller/controllers/slo"
 	controllerssynthetics "kubeform.dev/provider-datadog-controller/controllers/synthetics"
 	controllersuser "kubeform.dev/provider-datadog-controller/controllers/user"
+	controllerswebhook "kubeform.dev/provider-datadog-controller/controllers/webhook"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -249,6 +259,57 @@ func updateVWC(vwcClient *admissionregistrationv1.AdmissionregistrationV1Client,
 
 func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVersionKind, auditor *auditlib.EventPublisher, restrictToNamespace string) error {
 	switch gvk {
+	case schema.GroupVersionKind{
+		Group:   "apikey.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "ApiKey",
+	}:
+		if err := (&controllersapikey.ApiKeyReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("ApiKey"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_api_key"],
+			TypeName: "datadog_api_key",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "application.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Key",
+	}:
+		if err := (&controllersapplication.KeyReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Key"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_application_key"],
+			TypeName: "datadog_application_key",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Key")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "child.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Organization",
+	}:
+		if err := (&controllerschild.OrganizationReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Organization"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_child_organization"],
+			TypeName: "datadog_child_organization",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Organization")
+			return err
+		}
 	case schema.GroupVersionKind{
 		Group:   "dashboard.datadog.kubeform.com",
 		Version: "v1alpha1",
@@ -658,6 +719,40 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 			return err
 		}
 	case schema.GroupVersionKind{
+		Group:   "monitor.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Json",
+	}:
+		if err := (&controllersmonitor.JsonReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Json"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_monitor_json"],
+			TypeName: "datadog_monitor_json",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Json")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "organization.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Settings",
+	}:
+		if err := (&controllersorganization.SettingsReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Settings"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_organization_settings"],
+			TypeName: "datadog_organization_settings",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Settings")
+			return err
+		}
+	case schema.GroupVersionKind{
 		Group:   "role.datadog.kubeform.com",
 		Version: "v1alpha1",
 		Kind:    "Role",
@@ -689,6 +784,23 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 			TypeName: "datadog_security_monitoring_default_rule",
 		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "MonitoringDefaultRule")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "security.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "MonitoringFilter",
+	}:
+		if err := (&controllerssecurity.MonitoringFilterReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("MonitoringFilter"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_security_monitoring_filter"],
+			TypeName: "datadog_security_monitoring_filter",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "MonitoringFilter")
 			return err
 		}
 	case schema.GroupVersionKind{
@@ -810,6 +922,40 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 			setupLog.Error(err, "unable to create controller", "controller", "User")
 			return err
 		}
+	case schema.GroupVersionKind{
+		Group:   "webhook.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Webhook",
+	}:
+		if err := (&controllerswebhook.WebhookReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Webhook"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_webhook"],
+			TypeName: "datadog_webhook",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Webhook")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "webhook.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "CustomVariable",
+	}:
+		if err := (&controllerswebhook.CustomVariableReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("CustomVariable"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["datadog_webhook_custom_variable"],
+			TypeName: "datadog_webhook_custom_variable",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "CustomVariable")
+			return err
+		}
 
 	default:
 		return fmt.Errorf("Invalid CRD")
@@ -820,6 +966,33 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 
 func SetupWebhook(mgr manager.Manager, gvk schema.GroupVersionKind) error {
 	switch gvk {
+	case schema.GroupVersionKind{
+		Group:   "apikey.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "ApiKey",
+	}:
+		if err := (&apikeyv1alpha1.ApiKey{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "ApiKey")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "application.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Key",
+	}:
+		if err := (&applicationv1alpha1.Key{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Key")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "child.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Organization",
+	}:
+		if err := (&childv1alpha1.Organization{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Organization")
+			return err
+		}
 	case schema.GroupVersionKind{
 		Group:   "dashboard.datadog.kubeform.com",
 		Version: "v1alpha1",
@@ -1037,6 +1210,24 @@ func SetupWebhook(mgr manager.Manager, gvk schema.GroupVersionKind) error {
 			return err
 		}
 	case schema.GroupVersionKind{
+		Group:   "monitor.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Json",
+	}:
+		if err := (&monitorv1alpha1.Json{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Json")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "organization.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Settings",
+	}:
+		if err := (&organizationv1alpha1.Settings{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Settings")
+			return err
+		}
+	case schema.GroupVersionKind{
 		Group:   "role.datadog.kubeform.com",
 		Version: "v1alpha1",
 		Kind:    "Role",
@@ -1052,6 +1243,15 @@ func SetupWebhook(mgr manager.Manager, gvk schema.GroupVersionKind) error {
 	}:
 		if err := (&securityv1alpha1.MonitoringDefaultRule{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "MonitoringDefaultRule")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "security.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "MonitoringFilter",
+	}:
+		if err := (&securityv1alpha1.MonitoringFilter{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "MonitoringFilter")
 			return err
 		}
 	case schema.GroupVersionKind{
@@ -1115,6 +1315,24 @@ func SetupWebhook(mgr manager.Manager, gvk schema.GroupVersionKind) error {
 	}:
 		if err := (&userv1alpha1.User{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "User")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "webhook.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Webhook",
+	}:
+		if err := (&webhookv1alpha1.Webhook{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Webhook")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "webhook.datadog.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "CustomVariable",
+	}:
+		if err := (&webhookv1alpha1.CustomVariable{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CustomVariable")
 			return err
 		}
 

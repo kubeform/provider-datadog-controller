@@ -12,17 +12,19 @@ import (
 	"encoding/json"
 )
 
-// SLOCorrectionUpdateRequestAttributes The attribute object associated with the SLO correction to be updated
+// SLOCorrectionUpdateRequestAttributes The attribute object associated with the SLO correction to be updated.
 type SLOCorrectionUpdateRequestAttributes struct {
 	Category *SLOCorrectionCategory `json:"category,omitempty"`
 	// Description of the correction being made.
 	Description *string `json:"description,omitempty"`
-	// Ending time of the correction in epoch seconds
+	// Ending time of the correction in epoch seconds.
 	End *int64 `json:"end,omitempty"`
-	// Starting time of the correction in epoch seconds
+	// Starting time of the correction in epoch seconds.
 	Start *int64 `json:"start,omitempty"`
-	// The timezone to display in the UI for the correction times (defaults to \"UTC\")
+	// The timezone to display in the UI for the correction times (defaults to \"UTC\").
 	Timezone *string `json:"timezone,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewSLOCorrectionUpdateRequestAttributes instantiates a new SLOCorrectionUpdateRequestAttributes object
@@ -204,6 +206,9 @@ func (o *SLOCorrectionUpdateRequestAttributes) SetTimezone(v string) {
 
 func (o SLOCorrectionUpdateRequestAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Category != nil {
 		toSerialize["category"] = o.Category
 	}
@@ -220,6 +225,40 @@ func (o SLOCorrectionUpdateRequestAttributes) MarshalJSON() ([]byte, error) {
 		toSerialize["timezone"] = o.Timezone
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *SLOCorrectionUpdateRequestAttributes) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Category    *SLOCorrectionCategory `json:"category,omitempty"`
+		Description *string                `json:"description,omitempty"`
+		End         *int64                 `json:"end,omitempty"`
+		Start       *int64                 `json:"start,omitempty"`
+		Timezone    *string                `json:"timezone,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Category; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Category = all.Category
+	o.Description = all.Description
+	o.End = all.End
+	o.Start = all.Start
+	o.Timezone = all.Timezone
+	return nil
 }
 
 type NullableSLOCorrectionUpdateRequestAttributes struct {

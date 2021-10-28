@@ -48,6 +48,10 @@ type UsageSummaryDateOrg struct {
 	CwsContainerCountAvg *int64 `json:"cws_container_count_avg,omitempty"`
 	// Shows the 99th percentile of all Cloud Workload Security hosts over all hours in the current date for the given org.
 	CwsHostTop99p *int64 `json:"cws_host_top99p,omitempty"`
+	// Shows the 99th percentile of all Database Monitoring hosts over all hours in the current month for all organizations.
+	DbmHostTop99pSum *int64 `json:"dbm_host_top99p_sum,omitempty"`
+	// Shows the average of all distinct Database Monitoring normalized queries over all hours in the current month for all organizations.
+	DbmQueriesAvgSum *int64 `json:"dbm_queries_avg_sum,omitempty"`
 	// The average task count for Fargate.
 	FargateTasksCountAvg *int64 `json:"fargate_tasks_count_avg,omitempty"`
 	// Shows the high-water mark of all Fargate tasks over all hours in the current date for the given org.
@@ -92,6 +96,10 @@ type UsageSummaryDateOrg struct {
 	RumSessionCountSum *int64 `json:"rum_session_count_sum,omitempty"`
 	// Shows the sum of RUM Sessions (browser and mobile) over all hours in the current date for the given org.
 	RumTotalSessionCountSum *int64 `json:"rum_total_session_count_sum,omitempty"`
+	// Shows the sum of all bytes scanned of logs usage by the Sensitive Data Scanner over all hours in the current month for all organizations.
+	SdsLogsScannedBytesSum *int64 `json:"sds_logs_scanned_bytes_sum,omitempty"`
+	// Shows the sum of all bytes scanned across all usage types by the Sensitive Data Scanner over all hours in the current month for all organizations.
+	SdsTotalScannedBytesSum *int64 `json:"sds_total_scanned_bytes_sum,omitempty"`
 	// Shows the sum of all Synthetic browser tests over all hours in the current date for the given org.
 	SyntheticsBrowserCheckCallsCountSum *int64 `json:"synthetics_browser_check_calls_count_sum,omitempty"`
 	// Shows the sum of all Synthetic API tests over all hours in the current date for the given org.
@@ -102,6 +110,8 @@ type UsageSummaryDateOrg struct {
 	TwolIngestedEventsBytesSum *int64 `json:"twol_ingested_events_bytes_sum,omitempty"`
 	// Shows the 99th percentile of all vSphere hosts over all hours in the current date for the given org.
 	VsphereHostTop99p *int64 `json:"vsphere_host_top99p,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewUsageSummaryDateOrg instantiates a new UsageSummaryDateOrg object
@@ -663,6 +673,70 @@ func (o *UsageSummaryDateOrg) HasCwsHostTop99p() bool {
 // SetCwsHostTop99p gets a reference to the given int64 and assigns it to the CwsHostTop99p field.
 func (o *UsageSummaryDateOrg) SetCwsHostTop99p(v int64) {
 	o.CwsHostTop99p = &v
+}
+
+// GetDbmHostTop99pSum returns the DbmHostTop99pSum field value if set, zero value otherwise.
+func (o *UsageSummaryDateOrg) GetDbmHostTop99pSum() int64 {
+	if o == nil || o.DbmHostTop99pSum == nil {
+		var ret int64
+		return ret
+	}
+	return *o.DbmHostTop99pSum
+}
+
+// GetDbmHostTop99pSumOk returns a tuple with the DbmHostTop99pSum field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UsageSummaryDateOrg) GetDbmHostTop99pSumOk() (*int64, bool) {
+	if o == nil || o.DbmHostTop99pSum == nil {
+		return nil, false
+	}
+	return o.DbmHostTop99pSum, true
+}
+
+// HasDbmHostTop99pSum returns a boolean if a field has been set.
+func (o *UsageSummaryDateOrg) HasDbmHostTop99pSum() bool {
+	if o != nil && o.DbmHostTop99pSum != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetDbmHostTop99pSum gets a reference to the given int64 and assigns it to the DbmHostTop99pSum field.
+func (o *UsageSummaryDateOrg) SetDbmHostTop99pSum(v int64) {
+	o.DbmHostTop99pSum = &v
+}
+
+// GetDbmQueriesAvgSum returns the DbmQueriesAvgSum field value if set, zero value otherwise.
+func (o *UsageSummaryDateOrg) GetDbmQueriesAvgSum() int64 {
+	if o == nil || o.DbmQueriesAvgSum == nil {
+		var ret int64
+		return ret
+	}
+	return *o.DbmQueriesAvgSum
+}
+
+// GetDbmQueriesAvgSumOk returns a tuple with the DbmQueriesAvgSum field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UsageSummaryDateOrg) GetDbmQueriesAvgSumOk() (*int64, bool) {
+	if o == nil || o.DbmQueriesAvgSum == nil {
+		return nil, false
+	}
+	return o.DbmQueriesAvgSum, true
+}
+
+// HasDbmQueriesAvgSum returns a boolean if a field has been set.
+func (o *UsageSummaryDateOrg) HasDbmQueriesAvgSum() bool {
+	if o != nil && o.DbmQueriesAvgSum != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetDbmQueriesAvgSum gets a reference to the given int64 and assigns it to the DbmQueriesAvgSum field.
+func (o *UsageSummaryDateOrg) SetDbmQueriesAvgSum(v int64) {
+	o.DbmQueriesAvgSum = &v
 }
 
 // GetFargateTasksCountAvg returns the FargateTasksCountAvg field value if set, zero value otherwise.
@@ -1369,6 +1443,70 @@ func (o *UsageSummaryDateOrg) SetRumTotalSessionCountSum(v int64) {
 	o.RumTotalSessionCountSum = &v
 }
 
+// GetSdsLogsScannedBytesSum returns the SdsLogsScannedBytesSum field value if set, zero value otherwise.
+func (o *UsageSummaryDateOrg) GetSdsLogsScannedBytesSum() int64 {
+	if o == nil || o.SdsLogsScannedBytesSum == nil {
+		var ret int64
+		return ret
+	}
+	return *o.SdsLogsScannedBytesSum
+}
+
+// GetSdsLogsScannedBytesSumOk returns a tuple with the SdsLogsScannedBytesSum field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UsageSummaryDateOrg) GetSdsLogsScannedBytesSumOk() (*int64, bool) {
+	if o == nil || o.SdsLogsScannedBytesSum == nil {
+		return nil, false
+	}
+	return o.SdsLogsScannedBytesSum, true
+}
+
+// HasSdsLogsScannedBytesSum returns a boolean if a field has been set.
+func (o *UsageSummaryDateOrg) HasSdsLogsScannedBytesSum() bool {
+	if o != nil && o.SdsLogsScannedBytesSum != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSdsLogsScannedBytesSum gets a reference to the given int64 and assigns it to the SdsLogsScannedBytesSum field.
+func (o *UsageSummaryDateOrg) SetSdsLogsScannedBytesSum(v int64) {
+	o.SdsLogsScannedBytesSum = &v
+}
+
+// GetSdsTotalScannedBytesSum returns the SdsTotalScannedBytesSum field value if set, zero value otherwise.
+func (o *UsageSummaryDateOrg) GetSdsTotalScannedBytesSum() int64 {
+	if o == nil || o.SdsTotalScannedBytesSum == nil {
+		var ret int64
+		return ret
+	}
+	return *o.SdsTotalScannedBytesSum
+}
+
+// GetSdsTotalScannedBytesSumOk returns a tuple with the SdsTotalScannedBytesSum field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UsageSummaryDateOrg) GetSdsTotalScannedBytesSumOk() (*int64, bool) {
+	if o == nil || o.SdsTotalScannedBytesSum == nil {
+		return nil, false
+	}
+	return o.SdsTotalScannedBytesSum, true
+}
+
+// HasSdsTotalScannedBytesSum returns a boolean if a field has been set.
+func (o *UsageSummaryDateOrg) HasSdsTotalScannedBytesSum() bool {
+	if o != nil && o.SdsTotalScannedBytesSum != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSdsTotalScannedBytesSum gets a reference to the given int64 and assigns it to the SdsTotalScannedBytesSum field.
+func (o *UsageSummaryDateOrg) SetSdsTotalScannedBytesSum(v int64) {
+	o.SdsTotalScannedBytesSum = &v
+}
+
 // GetSyntheticsBrowserCheckCallsCountSum returns the SyntheticsBrowserCheckCallsCountSum field value if set, zero value otherwise.
 func (o *UsageSummaryDateOrg) GetSyntheticsBrowserCheckCallsCountSum() int64 {
 	if o == nil || o.SyntheticsBrowserCheckCallsCountSum == nil {
@@ -1531,6 +1669,9 @@ func (o *UsageSummaryDateOrg) SetVsphereHostTop99p(v int64) {
 
 func (o UsageSummaryDateOrg) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.AgentHostTop99p != nil {
 		toSerialize["agent_host_top99p"] = o.AgentHostTop99p
 	}
@@ -1581,6 +1722,12 @@ func (o UsageSummaryDateOrg) MarshalJSON() ([]byte, error) {
 	}
 	if o.CwsHostTop99p != nil {
 		toSerialize["cws_host_top99p"] = o.CwsHostTop99p
+	}
+	if o.DbmHostTop99pSum != nil {
+		toSerialize["dbm_host_top99p_sum"] = o.DbmHostTop99pSum
+	}
+	if o.DbmQueriesAvgSum != nil {
+		toSerialize["dbm_queries_avg_sum"] = o.DbmQueriesAvgSum
 	}
 	if o.FargateTasksCountAvg != nil {
 		toSerialize["fargate_tasks_count_avg"] = o.FargateTasksCountAvg
@@ -1648,6 +1795,12 @@ func (o UsageSummaryDateOrg) MarshalJSON() ([]byte, error) {
 	if o.RumTotalSessionCountSum != nil {
 		toSerialize["rum_total_session_count_sum"] = o.RumTotalSessionCountSum
 	}
+	if o.SdsLogsScannedBytesSum != nil {
+		toSerialize["sds_logs_scanned_bytes_sum"] = o.SdsLogsScannedBytesSum
+	}
+	if o.SdsTotalScannedBytesSum != nil {
+		toSerialize["sds_total_scanned_bytes_sum"] = o.SdsTotalScannedBytesSum
+	}
 	if o.SyntheticsBrowserCheckCallsCountSum != nil {
 		toSerialize["synthetics_browser_check_calls_count_sum"] = o.SyntheticsBrowserCheckCallsCountSum
 	}
@@ -1664,6 +1817,118 @@ func (o UsageSummaryDateOrg) MarshalJSON() ([]byte, error) {
 		toSerialize["vsphere_host_top99p"] = o.VsphereHostTop99p
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *UsageSummaryDateOrg) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		AgentHostTop99p                         *int64  `json:"agent_host_top99p,omitempty"`
+		ApmAzureAppServiceHostTop99p            *int64  `json:"apm_azure_app_service_host_top99p,omitempty"`
+		ApmHostTop99p                           *int64  `json:"apm_host_top99p,omitempty"`
+		AuditLogsLinesIndexedSum                *int64  `json:"audit_logs_lines_indexed_sum,omitempty"`
+		AwsHostTop99p                           *int64  `json:"aws_host_top99p,omitempty"`
+		AwsLambdaFuncCount                      *int64  `json:"aws_lambda_func_count,omitempty"`
+		AwsLambdaInvocationsSum                 *int64  `json:"aws_lambda_invocations_sum,omitempty"`
+		AzureAppServiceTop99p                   *int64  `json:"azure_app_service_top99p,omitempty"`
+		BillableIngestedBytesSum                *int64  `json:"billable_ingested_bytes_sum,omitempty"`
+		ContainerAvg                            *int64  `json:"container_avg,omitempty"`
+		ContainerHwm                            *int64  `json:"container_hwm,omitempty"`
+		CspmContainerAvg                        *int64  `json:"cspm_container_avg,omitempty"`
+		CspmContainerHwm                        *int64  `json:"cspm_container_hwm,omitempty"`
+		CspmHostTop99p                          *int64  `json:"cspm_host_top99p,omitempty"`
+		CustomTsAvg                             *int64  `json:"custom_ts_avg,omitempty"`
+		CwsContainerCountAvg                    *int64  `json:"cws_container_count_avg,omitempty"`
+		CwsHostTop99p                           *int64  `json:"cws_host_top99p,omitempty"`
+		DbmHostTop99pSum                        *int64  `json:"dbm_host_top99p_sum,omitempty"`
+		DbmQueriesAvgSum                        *int64  `json:"dbm_queries_avg_sum,omitempty"`
+		FargateTasksCountAvg                    *int64  `json:"fargate_tasks_count_avg,omitempty"`
+		FargateTasksCountHwm                    *int64  `json:"fargate_tasks_count_hwm,omitempty"`
+		GcpHostTop99p                           *int64  `json:"gcp_host_top99p,omitempty"`
+		HerokuHostTop99p                        *int64  `json:"heroku_host_top99p,omitempty"`
+		Id                                      *string `json:"id,omitempty"`
+		IncidentManagementMonthlyActiveUsersHwm *int64  `json:"incident_management_monthly_active_users_hwm,omitempty"`
+		IndexedEventsCountSum                   *int64  `json:"indexed_events_count_sum,omitempty"`
+		InfraHostTop99p                         *int64  `json:"infra_host_top99p,omitempty"`
+		IngestedEventsBytesSum                  *int64  `json:"ingested_events_bytes_sum,omitempty"`
+		IotDeviceAggSum                         *int64  `json:"iot_device_agg_sum,omitempty"`
+		IotDeviceTop99pSum                      *int64  `json:"iot_device_top99p_sum,omitempty"`
+		MobileRumSessionCountAndroidSum         *int64  `json:"mobile_rum_session_count_android_sum,omitempty"`
+		MobileRumSessionCountIosSum             *int64  `json:"mobile_rum_session_count_ios_sum,omitempty"`
+		MobileRumSessionCountSum                *int64  `json:"mobile_rum_session_count_sum,omitempty"`
+		Name                                    *string `json:"name,omitempty"`
+		NetflowIndexedEventsCountSum            *int64  `json:"netflow_indexed_events_count_sum,omitempty"`
+		NpmHostTop99p                           *int64  `json:"npm_host_top99p,omitempty"`
+		OpentelemetryHostTop99p                 *int64  `json:"opentelemetry_host_top99p,omitempty"`
+		ProfilingHostTop99p                     *int64  `json:"profiling_host_top99p,omitempty"`
+		PublicId                                *string `json:"public_id,omitempty"`
+		RumSessionCountSum                      *int64  `json:"rum_session_count_sum,omitempty"`
+		RumTotalSessionCountSum                 *int64  `json:"rum_total_session_count_sum,omitempty"`
+		SdsLogsScannedBytesSum                  *int64  `json:"sds_logs_scanned_bytes_sum,omitempty"`
+		SdsTotalScannedBytesSum                 *int64  `json:"sds_total_scanned_bytes_sum,omitempty"`
+		SyntheticsBrowserCheckCallsCountSum     *int64  `json:"synthetics_browser_check_calls_count_sum,omitempty"`
+		SyntheticsCheckCallsCountSum            *int64  `json:"synthetics_check_calls_count_sum,omitempty"`
+		TraceSearchIndexedEventsCountSum        *int64  `json:"trace_search_indexed_events_count_sum,omitempty"`
+		TwolIngestedEventsBytesSum              *int64  `json:"twol_ingested_events_bytes_sum,omitempty"`
+		VsphereHostTop99p                       *int64  `json:"vsphere_host_top99p,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.AgentHostTop99p = all.AgentHostTop99p
+	o.ApmAzureAppServiceHostTop99p = all.ApmAzureAppServiceHostTop99p
+	o.ApmHostTop99p = all.ApmHostTop99p
+	o.AuditLogsLinesIndexedSum = all.AuditLogsLinesIndexedSum
+	o.AwsHostTop99p = all.AwsHostTop99p
+	o.AwsLambdaFuncCount = all.AwsLambdaFuncCount
+	o.AwsLambdaInvocationsSum = all.AwsLambdaInvocationsSum
+	o.AzureAppServiceTop99p = all.AzureAppServiceTop99p
+	o.BillableIngestedBytesSum = all.BillableIngestedBytesSum
+	o.ContainerAvg = all.ContainerAvg
+	o.ContainerHwm = all.ContainerHwm
+	o.CspmContainerAvg = all.CspmContainerAvg
+	o.CspmContainerHwm = all.CspmContainerHwm
+	o.CspmHostTop99p = all.CspmHostTop99p
+	o.CustomTsAvg = all.CustomTsAvg
+	o.CwsContainerCountAvg = all.CwsContainerCountAvg
+	o.CwsHostTop99p = all.CwsHostTop99p
+	o.DbmHostTop99pSum = all.DbmHostTop99pSum
+	o.DbmQueriesAvgSum = all.DbmQueriesAvgSum
+	o.FargateTasksCountAvg = all.FargateTasksCountAvg
+	o.FargateTasksCountHwm = all.FargateTasksCountHwm
+	o.GcpHostTop99p = all.GcpHostTop99p
+	o.HerokuHostTop99p = all.HerokuHostTop99p
+	o.Id = all.Id
+	o.IncidentManagementMonthlyActiveUsersHwm = all.IncidentManagementMonthlyActiveUsersHwm
+	o.IndexedEventsCountSum = all.IndexedEventsCountSum
+	o.InfraHostTop99p = all.InfraHostTop99p
+	o.IngestedEventsBytesSum = all.IngestedEventsBytesSum
+	o.IotDeviceAggSum = all.IotDeviceAggSum
+	o.IotDeviceTop99pSum = all.IotDeviceTop99pSum
+	o.MobileRumSessionCountAndroidSum = all.MobileRumSessionCountAndroidSum
+	o.MobileRumSessionCountIosSum = all.MobileRumSessionCountIosSum
+	o.MobileRumSessionCountSum = all.MobileRumSessionCountSum
+	o.Name = all.Name
+	o.NetflowIndexedEventsCountSum = all.NetflowIndexedEventsCountSum
+	o.NpmHostTop99p = all.NpmHostTop99p
+	o.OpentelemetryHostTop99p = all.OpentelemetryHostTop99p
+	o.ProfilingHostTop99p = all.ProfilingHostTop99p
+	o.PublicId = all.PublicId
+	o.RumSessionCountSum = all.RumSessionCountSum
+	o.RumTotalSessionCountSum = all.RumTotalSessionCountSum
+	o.SdsLogsScannedBytesSum = all.SdsLogsScannedBytesSum
+	o.SdsTotalScannedBytesSum = all.SdsTotalScannedBytesSum
+	o.SyntheticsBrowserCheckCallsCountSum = all.SyntheticsBrowserCheckCallsCountSum
+	o.SyntheticsCheckCallsCountSum = all.SyntheticsCheckCallsCountSum
+	o.TraceSearchIndexedEventsCountSum = all.TraceSearchIndexedEventsCountSum
+	o.TwolIngestedEventsBytesSum = all.TwolIngestedEventsBytesSum
+	o.VsphereHostTop99p = all.VsphereHostTop99p
+	return nil
 }
 
 type NullableUsageSummaryDateOrg struct {

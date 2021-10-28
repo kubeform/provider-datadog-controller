@@ -21,8 +21,10 @@ type UsageTimeseriesHour struct {
 	NumCustomInputTimeseries *int64 `json:"num_custom_input_timeseries,omitempty"`
 	// Contains the number of custom metrics that are outputs for aggregations (metric configured is custom).
 	NumCustomOutputTimeseries *int64 `json:"num_custom_output_timeseries,omitempty"`
-	// Contains the number of non-aggregation custom metrics.
+	// Contains sum of non-aggregation custom metrics and custom metrics that are outputs for aggregations.
 	NumCustomTimeseries *int64 `json:"num_custom_timeseries,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewUsageTimeseriesHour instantiates a new UsageTimeseriesHour object
@@ -172,6 +174,9 @@ func (o *UsageTimeseriesHour) SetNumCustomTimeseries(v int64) {
 
 func (o UsageTimeseriesHour) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Hour != nil {
 		toSerialize["hour"] = o.Hour
 	}
@@ -185,6 +190,30 @@ func (o UsageTimeseriesHour) MarshalJSON() ([]byte, error) {
 		toSerialize["num_custom_timeseries"] = o.NumCustomTimeseries
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *UsageTimeseriesHour) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Hour                      *time.Time `json:"hour,omitempty"`
+		NumCustomInputTimeseries  *int64     `json:"num_custom_input_timeseries,omitempty"`
+		NumCustomOutputTimeseries *int64     `json:"num_custom_output_timeseries,omitempty"`
+		NumCustomTimeseries       *int64     `json:"num_custom_timeseries,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Hour = all.Hour
+	o.NumCustomInputTimeseries = all.NumCustomInputTimeseries
+	o.NumCustomOutputTimeseries = all.NumCustomOutputTimeseries
+	o.NumCustomTimeseries = all.NumCustomTimeseries
+	return nil
 }
 
 type NullableUsageTimeseriesHour struct {

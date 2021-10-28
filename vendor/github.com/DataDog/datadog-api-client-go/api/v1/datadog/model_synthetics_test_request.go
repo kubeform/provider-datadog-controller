@@ -14,7 +14,9 @@ import (
 
 // SyntheticsTestRequest Object describing the Synthetic test request.
 type SyntheticsTestRequest struct {
-	BasicAuth *SyntheticsBasicAuth `json:"basicAuth,omitempty"`
+	// Allows loading insecure content for an HTTP request in a multistep test step.
+	AllowInsecure *bool                `json:"allow_insecure,omitempty"`
+	BasicAuth     *SyntheticsBasicAuth `json:"basicAuth,omitempty"`
 	// Body to include in the test.
 	Body        *string                           `json:"body,omitempty"`
 	Certificate *SyntheticsTestRequestCertificate `json:"certificate,omitempty"`
@@ -22,6 +24,8 @@ type SyntheticsTestRequest struct {
 	DnsServer *string `json:"dnsServer,omitempty"`
 	// DNS server port to use for DNS tests.
 	DnsServerPort *int32 `json:"dnsServerPort,omitempty"`
+	// Specifies whether or not the request follows redirects.
+	FollowRedirects *bool `json:"follow_redirects,omitempty"`
 	// Headers to include when performing the test.
 	Headers *map[string]string `json:"headers,omitempty"`
 	// Host name to perform the test with.
@@ -35,12 +39,16 @@ type SyntheticsTestRequest struct {
 	Port *int64 `json:"port,omitempty"`
 	// Query to use for the test.
 	Query *interface{} `json:"query,omitempty"`
+	// For SSL tests, it specifies on which server you want to initiate the TLS handshake, allowing the server to present one of multiple possible certificates on the same IP address and TCP port number.
+	Servername *string `json:"servername,omitempty"`
 	// Turns on a traceroute probe to discover all gateways along the path to the host destination.
 	ShouldTrackHops *bool `json:"shouldTrackHops,omitempty"`
 	// Timeout in seconds for the test.
 	Timeout *float64 `json:"timeout,omitempty"`
 	// URL to perform the test with.
 	Url *string `json:"url,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewSyntheticsTestRequest instantiates a new SyntheticsTestRequest object
@@ -58,6 +66,38 @@ func NewSyntheticsTestRequest() *SyntheticsTestRequest {
 func NewSyntheticsTestRequestWithDefaults() *SyntheticsTestRequest {
 	this := SyntheticsTestRequest{}
 	return &this
+}
+
+// GetAllowInsecure returns the AllowInsecure field value if set, zero value otherwise.
+func (o *SyntheticsTestRequest) GetAllowInsecure() bool {
+	if o == nil || o.AllowInsecure == nil {
+		var ret bool
+		return ret
+	}
+	return *o.AllowInsecure
+}
+
+// GetAllowInsecureOk returns a tuple with the AllowInsecure field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SyntheticsTestRequest) GetAllowInsecureOk() (*bool, bool) {
+	if o == nil || o.AllowInsecure == nil {
+		return nil, false
+	}
+	return o.AllowInsecure, true
+}
+
+// HasAllowInsecure returns a boolean if a field has been set.
+func (o *SyntheticsTestRequest) HasAllowInsecure() bool {
+	if o != nil && o.AllowInsecure != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAllowInsecure gets a reference to the given bool and assigns it to the AllowInsecure field.
+func (o *SyntheticsTestRequest) SetAllowInsecure(v bool) {
+	o.AllowInsecure = &v
 }
 
 // GetBasicAuth returns the BasicAuth field value if set, zero value otherwise.
@@ -218,6 +258,38 @@ func (o *SyntheticsTestRequest) HasDnsServerPort() bool {
 // SetDnsServerPort gets a reference to the given int32 and assigns it to the DnsServerPort field.
 func (o *SyntheticsTestRequest) SetDnsServerPort(v int32) {
 	o.DnsServerPort = &v
+}
+
+// GetFollowRedirects returns the FollowRedirects field value if set, zero value otherwise.
+func (o *SyntheticsTestRequest) GetFollowRedirects() bool {
+	if o == nil || o.FollowRedirects == nil {
+		var ret bool
+		return ret
+	}
+	return *o.FollowRedirects
+}
+
+// GetFollowRedirectsOk returns a tuple with the FollowRedirects field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SyntheticsTestRequest) GetFollowRedirectsOk() (*bool, bool) {
+	if o == nil || o.FollowRedirects == nil {
+		return nil, false
+	}
+	return o.FollowRedirects, true
+}
+
+// HasFollowRedirects returns a boolean if a field has been set.
+func (o *SyntheticsTestRequest) HasFollowRedirects() bool {
+	if o != nil && o.FollowRedirects != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetFollowRedirects gets a reference to the given bool and assigns it to the FollowRedirects field.
+func (o *SyntheticsTestRequest) SetFollowRedirects(v bool) {
+	o.FollowRedirects = &v
 }
 
 // GetHeaders returns the Headers field value if set, zero value otherwise.
@@ -444,6 +516,38 @@ func (o *SyntheticsTestRequest) SetQuery(v interface{}) {
 	o.Query = &v
 }
 
+// GetServername returns the Servername field value if set, zero value otherwise.
+func (o *SyntheticsTestRequest) GetServername() string {
+	if o == nil || o.Servername == nil {
+		var ret string
+		return ret
+	}
+	return *o.Servername
+}
+
+// GetServernameOk returns a tuple with the Servername field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SyntheticsTestRequest) GetServernameOk() (*string, bool) {
+	if o == nil || o.Servername == nil {
+		return nil, false
+	}
+	return o.Servername, true
+}
+
+// HasServername returns a boolean if a field has been set.
+func (o *SyntheticsTestRequest) HasServername() bool {
+	if o != nil && o.Servername != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetServername gets a reference to the given string and assigns it to the Servername field.
+func (o *SyntheticsTestRequest) SetServername(v string) {
+	o.Servername = &v
+}
+
 // GetShouldTrackHops returns the ShouldTrackHops field value if set, zero value otherwise.
 func (o *SyntheticsTestRequest) GetShouldTrackHops() bool {
 	if o == nil || o.ShouldTrackHops == nil {
@@ -542,6 +646,12 @@ func (o *SyntheticsTestRequest) SetUrl(v string) {
 
 func (o SyntheticsTestRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
+	if o.AllowInsecure != nil {
+		toSerialize["allow_insecure"] = o.AllowInsecure
+	}
 	if o.BasicAuth != nil {
 		toSerialize["basicAuth"] = o.BasicAuth
 	}
@@ -556,6 +666,9 @@ func (o SyntheticsTestRequest) MarshalJSON() ([]byte, error) {
 	}
 	if o.DnsServerPort != nil {
 		toSerialize["dnsServerPort"] = o.DnsServerPort
+	}
+	if o.FollowRedirects != nil {
+		toSerialize["follow_redirects"] = o.FollowRedirects
 	}
 	if o.Headers != nil {
 		toSerialize["headers"] = o.Headers
@@ -578,6 +691,9 @@ func (o SyntheticsTestRequest) MarshalJSON() ([]byte, error) {
 	if o.Query != nil {
 		toSerialize["query"] = o.Query
 	}
+	if o.Servername != nil {
+		toSerialize["servername"] = o.Servername
+	}
 	if o.ShouldTrackHops != nil {
 		toSerialize["shouldTrackHops"] = o.ShouldTrackHops
 	}
@@ -588,6 +704,66 @@ func (o SyntheticsTestRequest) MarshalJSON() ([]byte, error) {
 		toSerialize["url"] = o.Url
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *SyntheticsTestRequest) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		AllowInsecure        *bool                             `json:"allow_insecure,omitempty"`
+		BasicAuth            *SyntheticsBasicAuth              `json:"basicAuth,omitempty"`
+		Body                 *string                           `json:"body,omitempty"`
+		Certificate          *SyntheticsTestRequestCertificate `json:"certificate,omitempty"`
+		DnsServer            *string                           `json:"dnsServer,omitempty"`
+		DnsServerPort        *int32                            `json:"dnsServerPort,omitempty"`
+		FollowRedirects      *bool                             `json:"follow_redirects,omitempty"`
+		Headers              *map[string]string                `json:"headers,omitempty"`
+		Host                 *string                           `json:"host,omitempty"`
+		Method               *HTTPMethod                       `json:"method,omitempty"`
+		NoSavingResponseBody *bool                             `json:"noSavingResponseBody,omitempty"`
+		NumberOfPackets      *int32                            `json:"numberOfPackets,omitempty"`
+		Port                 *int64                            `json:"port,omitempty"`
+		Query                *interface{}                      `json:"query,omitempty"`
+		Servername           *string                           `json:"servername,omitempty"`
+		ShouldTrackHops      *bool                             `json:"shouldTrackHops,omitempty"`
+		Timeout              *float64                          `json:"timeout,omitempty"`
+		Url                  *string                           `json:"url,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Method; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.AllowInsecure = all.AllowInsecure
+	o.BasicAuth = all.BasicAuth
+	o.Body = all.Body
+	o.Certificate = all.Certificate
+	o.DnsServer = all.DnsServer
+	o.DnsServerPort = all.DnsServerPort
+	o.FollowRedirects = all.FollowRedirects
+	o.Headers = all.Headers
+	o.Host = all.Host
+	o.Method = all.Method
+	o.NoSavingResponseBody = all.NoSavingResponseBody
+	o.NumberOfPackets = all.NumberOfPackets
+	o.Port = all.Port
+	o.Query = all.Query
+	o.Servername = all.Servername
+	o.ShouldTrackHops = all.ShouldTrackHops
+	o.Timeout = all.Timeout
+	o.Url = all.Url
+	return nil
 }
 
 type NullableSyntheticsTestRequest struct {
