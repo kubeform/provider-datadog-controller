@@ -59,7 +59,7 @@ Note, enum values are always validated and all unused variables are silently ign
 ### URLs Configuration per Operation
 
 Each operation can use different server URL defined using `OperationServers` map in the `Configuration`.
-An operation is uniquely identifield by `"{classname}Service.{nickname}"` string.
+An operation is uniquely identified by `"{classname}Service.{nickname}"` string.
 Similar rules for overriding default operation server index and variables applies by using `sw.ContextOperationServerIndices` and `sw.ContextOperationServerVariables` context maps.
 
 ```
@@ -162,6 +162,12 @@ Class | Method | HTTP request | Description
 *SecurityMonitoringApi* | [**SearchSecurityMonitoringSignals**](docs/SecurityMonitoringApi.md#searchsecuritymonitoringsignals) | **Post** /api/v2/security_monitoring/signals/search | Get a list of security signals
 *SecurityMonitoringApi* | [**UpdateSecurityFilter**](docs/SecurityMonitoringApi.md#updatesecurityfilter) | **Patch** /api/v2/security_monitoring/configuration/security_filters/{security_filter_id} | Update a security filter
 *SecurityMonitoringApi* | [**UpdateSecurityMonitoringRule**](docs/SecurityMonitoringApi.md#updatesecuritymonitoringrule) | **Put** /api/v2/security_monitoring/rules/{rule_id} | Update an existing rule
+*ServiceAccountsApi* | [**CreateServiceAccountApplicationKey**](docs/ServiceAccountsApi.md#createserviceaccountapplicationkey) | **Post** /api/v2/service_accounts/{service_account_id}/application_keys | Create an application key for this service account
+*ServiceAccountsApi* | [**DeleteServiceAccountApplicationKey**](docs/ServiceAccountsApi.md#deleteserviceaccountapplicationkey) | **Delete** /api/v2/service_accounts/{service_account_id}/application_keys/{app_key_id} | Delete an application key for this service account
+*ServiceAccountsApi* | [**GetServiceAccountApplicationKey**](docs/ServiceAccountsApi.md#getserviceaccountapplicationkey) | **Get** /api/v2/service_accounts/{service_account_id}/application_keys/{app_key_id} | Get one application key for this service account
+*ServiceAccountsApi* | [**ListServiceAccountApplicationKeys**](docs/ServiceAccountsApi.md#listserviceaccountapplicationkeys) | **Get** /api/v2/service_accounts/{service_account_id}/application_keys | List application keys for this service account
+*ServiceAccountsApi* | [**UpdateServiceAccountApplicationKey**](docs/ServiceAccountsApi.md#updateserviceaccountapplicationkey) | **Patch** /api/v2/service_accounts/{service_account_id}/application_keys/{app_key_id} | Edit an application key for this service account
+*UsersApi* | [**CreateServiceAccount**](docs/UsersApi.md#createserviceaccount) | **Post** /api/v2/service_accounts | Create a service account
 *UsersApi* | [**CreateUser**](docs/UsersApi.md#createuser) | **Post** /api/v2/users | Create a user
 *UsersApi* | [**DisableUser**](docs/UsersApi.md#disableuser) | **Delete** /api/v2/users/{user_id} | Disable a user
 *UsersApi* | [**GetInvitation**](docs/UsersApi.md#getinvitation) | **Get** /api/v2/user_invitations/{user_invitation_uuid} | Get a user invitation
@@ -225,6 +231,7 @@ Class | Method | HTTP request | Description
  - [IncidentFieldAttributesSingleValueType](docs/IncidentFieldAttributesSingleValueType.md)
  - [IncidentFieldAttributesValueType](docs/IncidentFieldAttributesValueType.md)
  - [IncidentIntegrationMetadataType](docs/IncidentIntegrationMetadataType.md)
+ - [IncidentNotificationHandle](docs/IncidentNotificationHandle.md)
  - [IncidentPostmortemType](docs/IncidentPostmortemType.md)
  - [IncidentRelatedObject](docs/IncidentRelatedObject.md)
  - [IncidentResponse](docs/IncidentResponse.md)
@@ -379,6 +386,7 @@ Class | Method | HTTP request | Description
  - [PartialAPIKeyAttributes](docs/PartialAPIKeyAttributes.md)
  - [PartialApplicationKey](docs/PartialApplicationKey.md)
  - [PartialApplicationKeyAttributes](docs/PartialApplicationKeyAttributes.md)
+ - [PartialApplicationKeyResponse](docs/PartialApplicationKeyResponse.md)
  - [Permission](docs/Permission.md)
  - [PermissionAttributes](docs/PermissionAttributes.md)
  - [PermissionsResponse](docs/PermissionsResponse.md)
@@ -459,6 +467,8 @@ Class | Method | HTTP request | Description
  - [SecurityMonitoringRuleQueryCreate](docs/SecurityMonitoringRuleQueryCreate.md)
  - [SecurityMonitoringRuleResponse](docs/SecurityMonitoringRuleResponse.md)
  - [SecurityMonitoringRuleSeverity](docs/SecurityMonitoringRuleSeverity.md)
+ - [SecurityMonitoringRuleTypeCreate](docs/SecurityMonitoringRuleTypeCreate.md)
+ - [SecurityMonitoringRuleTypeRead](docs/SecurityMonitoringRuleTypeRead.md)
  - [SecurityMonitoringRuleUpdatePayload](docs/SecurityMonitoringRuleUpdatePayload.md)
  - [SecurityMonitoringRuntimeAgentRule](docs/SecurityMonitoringRuntimeAgentRule.md)
  - [SecurityMonitoringSignal](docs/SecurityMonitoringSignal.md)
@@ -472,6 +482,9 @@ Class | Method | HTTP request | Description
  - [SecurityMonitoringSignalsListResponseMeta](docs/SecurityMonitoringSignalsListResponseMeta.md)
  - [SecurityMonitoringSignalsListResponseMetaPage](docs/SecurityMonitoringSignalsListResponseMetaPage.md)
  - [SecurityMonitoringSignalsSort](docs/SecurityMonitoringSignalsSort.md)
+ - [ServiceAccountCreateAttributes](docs/ServiceAccountCreateAttributes.md)
+ - [ServiceAccountCreateData](docs/ServiceAccountCreateData.md)
+ - [ServiceAccountCreateRequest](docs/ServiceAccountCreateRequest.md)
  - [User](docs/User.md)
  - [UserAttributes](docs/UserAttributes.md)
  - [UserCreateAttributes](docs/UserCreateAttributes.md)
@@ -498,6 +511,49 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Authorization
 
+
+
+### AuthZ
+
+
+- **Type**: OAuth
+- **Flow**: accessCode
+- **Authorization URL**: /oauth2/v1/authorize
+- **Scopes**: 
+ - **dashboards_public_share**: The ability to share dashboards externally.
+ - **dashboards_read**: The ability to view dashboards.
+ - **dashboards_write**: The ability to create and change dashboards.
+ - **events_read**: The ability to read events data.
+ - **incident_read**: The ability to view incidents in Datadog.
+ - **incident_settings_write**: The ability to configure incident settings.
+ - **incident_write**: The ability to create, view, and manage incidents in Datadog.
+ - **metrics_read**: The ability to view custom metrics.
+ - **security_monitoring_filters_read**: The ability to read Security Filters.
+ - **security_monitoring_filters_write**: The ability to create, edit and delete Security Filters.
+ - **security_monitoring_rules_read**: The ability to read Detection rules.
+ - **security_monitoring_rules_write**: The ability to create and edit Detection rules.
+ - **security_monitoring_signals_read**: The ability to view Security signals.
+ - **user_access_invite**: Allows users to invite other users to your organization.
+ - **user_access_manage**: Grants the permission to disable users, manage user roles and SAML-to-role mappings.
+
+Example
+
+```golang
+auth := context.WithValue(context.Background(), sw.ContextAccessToken, "ACCESSTOKENSTRING")
+r, err := client.Service.Operation(auth, args)
+```
+
+Or via OAuth2 module to automatically refresh tokens and perform user authentication.
+
+```golang
+import "golang.org/x/oauth2"
+
+/* Perform OAuth2 round trip request and obtain a token */
+
+tokenSource := oauth2cfg.TokenSource(createContext(httpClient), &token)
+auth := context.WithValue(oauth2.NoContext, sw.ContextOAuth2, tokenSource)
+r, err := client.Service.Operation(auth, args)
+```
 
 
 ### apiKeyAuth

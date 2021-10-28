@@ -15,6 +15,7 @@ import (
 // TimeseriesWidgetRequest Updated timeseries widget.
 type TimeseriesWidgetRequest struct {
 	ApmQuery    *LogQueryDefinition `json:"apm_query,omitempty"`
+	AuditQuery  *LogQueryDefinition `json:"audit_query,omitempty"`
 	DisplayType *WidgetDisplayType  `json:"display_type,omitempty"`
 	EventQuery  *LogQueryDefinition `json:"event_query,omitempty"`
 	// List of formulas that operate on queries. **This feature is currently in beta.**
@@ -35,6 +36,8 @@ type TimeseriesWidgetRequest struct {
 	RumQuery       *LogQueryDefinition                  `json:"rum_query,omitempty"`
 	SecurityQuery  *LogQueryDefinition                  `json:"security_query,omitempty"`
 	Style          *WidgetRequestStyle                  `json:"style,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewTimeseriesWidgetRequest instantiates a new TimeseriesWidgetRequest object
@@ -84,6 +87,38 @@ func (o *TimeseriesWidgetRequest) HasApmQuery() bool {
 // SetApmQuery gets a reference to the given LogQueryDefinition and assigns it to the ApmQuery field.
 func (o *TimeseriesWidgetRequest) SetApmQuery(v LogQueryDefinition) {
 	o.ApmQuery = &v
+}
+
+// GetAuditQuery returns the AuditQuery field value if set, zero value otherwise.
+func (o *TimeseriesWidgetRequest) GetAuditQuery() LogQueryDefinition {
+	if o == nil || o.AuditQuery == nil {
+		var ret LogQueryDefinition
+		return ret
+	}
+	return *o.AuditQuery
+}
+
+// GetAuditQueryOk returns a tuple with the AuditQuery field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *TimeseriesWidgetRequest) GetAuditQueryOk() (*LogQueryDefinition, bool) {
+	if o == nil || o.AuditQuery == nil {
+		return nil, false
+	}
+	return o.AuditQuery, true
+}
+
+// HasAuditQuery returns a boolean if a field has been set.
+func (o *TimeseriesWidgetRequest) HasAuditQuery() bool {
+	if o != nil && o.AuditQuery != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAuditQuery gets a reference to the given LogQueryDefinition and assigns it to the AuditQuery field.
+func (o *TimeseriesWidgetRequest) SetAuditQuery(v LogQueryDefinition) {
+	o.AuditQuery = &v
 }
 
 // GetDisplayType returns the DisplayType field value if set, zero value otherwise.
@@ -568,8 +603,14 @@ func (o *TimeseriesWidgetRequest) SetStyle(v WidgetRequestStyle) {
 
 func (o TimeseriesWidgetRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.ApmQuery != nil {
 		toSerialize["apm_query"] = o.ApmQuery
+	}
+	if o.AuditQuery != nil {
+		toSerialize["audit_query"] = o.AuditQuery
 	}
 	if o.DisplayType != nil {
 		toSerialize["display_type"] = o.DisplayType
@@ -617,6 +658,72 @@ func (o TimeseriesWidgetRequest) MarshalJSON() ([]byte, error) {
 		toSerialize["style"] = o.Style
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *TimeseriesWidgetRequest) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		ApmQuery            *LogQueryDefinition                  `json:"apm_query,omitempty"`
+		AuditQuery          *LogQueryDefinition                  `json:"audit_query,omitempty"`
+		DisplayType         *WidgetDisplayType                   `json:"display_type,omitempty"`
+		EventQuery          *LogQueryDefinition                  `json:"event_query,omitempty"`
+		Formulas            *[]WidgetFormula                     `json:"formulas,omitempty"`
+		LogQuery            *LogQueryDefinition                  `json:"log_query,omitempty"`
+		Metadata            *[]TimeseriesWidgetExpressionAlias   `json:"metadata,omitempty"`
+		NetworkQuery        *LogQueryDefinition                  `json:"network_query,omitempty"`
+		OnRightYaxis        *bool                                `json:"on_right_yaxis,omitempty"`
+		ProcessQuery        *ProcessQueryDefinition              `json:"process_query,omitempty"`
+		ProfileMetricsQuery *LogQueryDefinition                  `json:"profile_metrics_query,omitempty"`
+		Q                   *string                              `json:"q,omitempty"`
+		Queries             *[]FormulaAndFunctionQueryDefinition `json:"queries,omitempty"`
+		ResponseFormat      *FormulaAndFunctionResponseFormat    `json:"response_format,omitempty"`
+		RumQuery            *LogQueryDefinition                  `json:"rum_query,omitempty"`
+		SecurityQuery       *LogQueryDefinition                  `json:"security_query,omitempty"`
+		Style               *WidgetRequestStyle                  `json:"style,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.DisplayType; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.ResponseFormat; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.ApmQuery = all.ApmQuery
+	o.AuditQuery = all.AuditQuery
+	o.DisplayType = all.DisplayType
+	o.EventQuery = all.EventQuery
+	o.Formulas = all.Formulas
+	o.LogQuery = all.LogQuery
+	o.Metadata = all.Metadata
+	o.NetworkQuery = all.NetworkQuery
+	o.OnRightYaxis = all.OnRightYaxis
+	o.ProcessQuery = all.ProcessQuery
+	o.ProfileMetricsQuery = all.ProfileMetricsQuery
+	o.Q = all.Q
+	o.Queries = all.Queries
+	o.ResponseFormat = all.ResponseFormat
+	o.RumQuery = all.RumQuery
+	o.SecurityQuery = all.SecurityQuery
+	o.Style = all.Style
+	return nil
 }
 
 type NullableTimeseriesWidgetRequest struct {

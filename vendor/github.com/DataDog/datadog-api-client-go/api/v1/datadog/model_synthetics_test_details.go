@@ -14,7 +14,8 @@ import (
 
 // SyntheticsTestDetails Object containing details about your Synthetic test.
 type SyntheticsTestDetails struct {
-	Config *SyntheticsTestConfig `json:"config,omitempty"`
+	Config  *SyntheticsTestConfig `json:"config,omitempty"`
+	Creator *Creator              `json:"creator,omitempty"`
 	// Array of locations used to run the test.
 	Locations *[]string `json:"locations,omitempty"`
 	// Notification message associated with the test.
@@ -33,6 +34,8 @@ type SyntheticsTestDetails struct {
 	// Array of tags attached to the test.
 	Tags *[]string                  `json:"tags,omitempty"`
 	Type *SyntheticsTestDetailsType `json:"type,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewSyntheticsTestDetails instantiates a new SyntheticsTestDetails object
@@ -82,6 +85,38 @@ func (o *SyntheticsTestDetails) HasConfig() bool {
 // SetConfig gets a reference to the given SyntheticsTestConfig and assigns it to the Config field.
 func (o *SyntheticsTestDetails) SetConfig(v SyntheticsTestConfig) {
 	o.Config = &v
+}
+
+// GetCreator returns the Creator field value if set, zero value otherwise.
+func (o *SyntheticsTestDetails) GetCreator() Creator {
+	if o == nil || o.Creator == nil {
+		var ret Creator
+		return ret
+	}
+	return *o.Creator
+}
+
+// GetCreatorOk returns a tuple with the Creator field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SyntheticsTestDetails) GetCreatorOk() (*Creator, bool) {
+	if o == nil || o.Creator == nil {
+		return nil, false
+	}
+	return o.Creator, true
+}
+
+// HasCreator returns a boolean if a field has been set.
+func (o *SyntheticsTestDetails) HasCreator() bool {
+	if o != nil && o.Creator != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCreator gets a reference to the given Creator and assigns it to the Creator field.
+func (o *SyntheticsTestDetails) SetCreator(v Creator) {
+	o.Creator = &v
 }
 
 // GetLocations returns the Locations field value if set, zero value otherwise.
@@ -438,8 +473,14 @@ func (o *SyntheticsTestDetails) SetType(v SyntheticsTestDetailsType) {
 
 func (o SyntheticsTestDetails) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Config != nil {
 		toSerialize["config"] = o.Config
+	}
+	if o.Creator != nil {
+		toSerialize["creator"] = o.Creator
 	}
 	if o.Locations != nil {
 		toSerialize["locations"] = o.Locations
@@ -475,6 +516,72 @@ func (o SyntheticsTestDetails) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *SyntheticsTestDetails) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Config    *SyntheticsTestConfig         `json:"config,omitempty"`
+		Creator   *Creator                      `json:"creator,omitempty"`
+		Locations *[]string                     `json:"locations,omitempty"`
+		Message   *string                       `json:"message,omitempty"`
+		MonitorId *int64                        `json:"monitor_id,omitempty"`
+		Name      *string                       `json:"name,omitempty"`
+		Options   *SyntheticsTestOptions        `json:"options,omitempty"`
+		PublicId  *string                       `json:"public_id,omitempty"`
+		Status    *SyntheticsTestPauseStatus    `json:"status,omitempty"`
+		Steps     *[]SyntheticsStep             `json:"steps,omitempty"`
+		Subtype   *SyntheticsTestDetailsSubType `json:"subtype,omitempty"`
+		Tags      *[]string                     `json:"tags,omitempty"`
+		Type      *SyntheticsTestDetailsType    `json:"type,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Status; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Subtype; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Type; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Config = all.Config
+	o.Creator = all.Creator
+	o.Locations = all.Locations
+	o.Message = all.Message
+	o.MonitorId = all.MonitorId
+	o.Name = all.Name
+	o.Options = all.Options
+	o.PublicId = all.PublicId
+	o.Status = all.Status
+	o.Steps = all.Steps
+	o.Subtype = all.Subtype
+	o.Tags = all.Tags
+	o.Type = all.Type
+	return nil
 }
 
 type NullableSyntheticsTestDetails struct {

@@ -34,15 +34,17 @@ type Monitor struct {
 	Options      *MonitorOptions       `json:"options,omitempty"`
 	OverallState *MonitorOverallStates `json:"overall_state,omitempty"`
 	// Integer from 1 (high) to 5 (low) indicating alert severity.
-	Priority *int64 `json:"priority,omitempty"`
+	Priority NullableInt64 `json:"priority,omitempty"`
 	// The monitor query.
 	Query string `json:"query"`
 	// A list of role identifiers that can be pulled from the Roles API. Cannot be used with `locked` option.
-	RestrictedRoles *[]string     `json:"restricted_roles,omitempty"`
+	RestrictedRoles []string      `json:"restricted_roles,omitempty"`
 	State           *MonitorState `json:"state,omitempty"`
 	// Tags associated to your monitor.
 	Tags *[]string   `json:"tags,omitempty"`
 	Type MonitorType `json:"type"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewMonitor instantiates a new Monitor object
@@ -395,36 +397,47 @@ func (o *Monitor) SetOverallState(v MonitorOverallStates) {
 	o.OverallState = &v
 }
 
-// GetPriority returns the Priority field value if set, zero value otherwise.
+// GetPriority returns the Priority field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *Monitor) GetPriority() int64 {
-	if o == nil || o.Priority == nil {
+	if o == nil || o.Priority.Get() == nil {
 		var ret int64
 		return ret
 	}
-	return *o.Priority
+	return *o.Priority.Get()
 }
 
 // GetPriorityOk returns a tuple with the Priority field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *Monitor) GetPriorityOk() (*int64, bool) {
-	if o == nil || o.Priority == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Priority, true
+	return o.Priority.Get(), o.Priority.IsSet()
 }
 
 // HasPriority returns a boolean if a field has been set.
 func (o *Monitor) HasPriority() bool {
-	if o != nil && o.Priority != nil {
+	if o != nil && o.Priority.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetPriority gets a reference to the given int64 and assigns it to the Priority field.
+// SetPriority gets a reference to the given NullableInt64 and assigns it to the Priority field.
 func (o *Monitor) SetPriority(v int64) {
-	o.Priority = &v
+	o.Priority.Set(&v)
+}
+
+// SetPriorityNil sets the value for Priority to be an explicit nil
+func (o *Monitor) SetPriorityNil() {
+	o.Priority.Set(nil)
+}
+
+// UnsetPriority ensures that no value is present for Priority, not even an explicit nil
+func (o *Monitor) UnsetPriority() {
+	o.Priority.Unset()
 }
 
 // GetQuery returns the Query field value
@@ -451,22 +464,23 @@ func (o *Monitor) SetQuery(v string) {
 	o.Query = v
 }
 
-// GetRestrictedRoles returns the RestrictedRoles field value if set, zero value otherwise.
+// GetRestrictedRoles returns the RestrictedRoles field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *Monitor) GetRestrictedRoles() []string {
-	if o == nil || o.RestrictedRoles == nil {
+	if o == nil {
 		var ret []string
 		return ret
 	}
-	return *o.RestrictedRoles
+	return o.RestrictedRoles
 }
 
 // GetRestrictedRolesOk returns a tuple with the RestrictedRoles field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *Monitor) GetRestrictedRolesOk() (*[]string, bool) {
 	if o == nil || o.RestrictedRoles == nil {
 		return nil, false
 	}
-	return o.RestrictedRoles, true
+	return &o.RestrictedRoles, true
 }
 
 // HasRestrictedRoles returns a boolean if a field has been set.
@@ -480,7 +494,7 @@ func (o *Monitor) HasRestrictedRoles() bool {
 
 // SetRestrictedRoles gets a reference to the given []string and assigns it to the RestrictedRoles field.
 func (o *Monitor) SetRestrictedRoles(v []string) {
-	o.RestrictedRoles = &v
+	o.RestrictedRoles = v
 }
 
 // GetState returns the State field value if set, zero value otherwise.
@@ -573,6 +587,9 @@ func (o *Monitor) SetType(v MonitorType) {
 
 func (o Monitor) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Created != nil {
 		toSerialize["created"] = o.Created
 	}
@@ -603,8 +620,8 @@ func (o Monitor) MarshalJSON() ([]byte, error) {
 	if o.OverallState != nil {
 		toSerialize["overall_state"] = o.OverallState
 	}
-	if o.Priority != nil {
-		toSerialize["priority"] = o.Priority
+	if o.Priority.IsSet() {
+		toSerialize["priority"] = o.Priority.Get()
 	}
 	if true {
 		toSerialize["query"] = o.Query
@@ -625,6 +642,7 @@ func (o Monitor) MarshalJSON() ([]byte, error) {
 }
 
 func (o *Monitor) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		Query *string      `json:"query"`
 		Type  *MonitorType `json:"type"`
@@ -640,9 +658,9 @@ func (o *Monitor) UnmarshalJSON(bytes []byte) (err error) {
 		Name            *string               `json:"name,omitempty"`
 		Options         *MonitorOptions       `json:"options,omitempty"`
 		OverallState    *MonitorOverallStates `json:"overall_state,omitempty"`
-		Priority        *int64                `json:"priority,omitempty"`
+		Priority        NullableInt64         `json:"priority,omitempty"`
 		Query           string                `json:"query"`
-		RestrictedRoles *[]string             `json:"restricted_roles,omitempty"`
+		RestrictedRoles []string              `json:"restricted_roles,omitempty"`
 		State           *MonitorState         `json:"state,omitempty"`
 		Tags            *[]string             `json:"tags,omitempty"`
 		Type            MonitorType           `json:"type"`
@@ -659,7 +677,28 @@ func (o *Monitor) UnmarshalJSON(bytes []byte) (err error) {
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.OverallState; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Type; !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.Created = all.Created
 	o.Creator = all.Creator

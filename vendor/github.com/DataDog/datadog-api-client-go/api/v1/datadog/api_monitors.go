@@ -14,7 +14,6 @@ import (
 	_ioutil "io/ioutil"
 	_nethttp "net/http"
 	_neturl "net/url"
-	"reflect"
 	"strings"
 )
 
@@ -74,17 +73,7 @@ func (a *MonitorsApiService) checkCanDeleteMonitorExecute(r apiCheckCanDeleteMon
 		return localVarReturnValue, nil, reportError("monitorIds is required and must be specified")
 	}
 
-	{
-		t := *r.monitorIds
-		if reflect.TypeOf(t).Kind() == reflect.Slice {
-			s := reflect.ValueOf(t)
-			for i := 0; i < s.Len(); i++ {
-				localVarQueryParams.Add("monitor_ids", parameterToString(s.Index(i), "multi"))
-			}
-		} else {
-			localVarQueryParams.Add("monitor_ids", parameterToString(t, "multi"))
-		}
-	}
+	localVarQueryParams.Add("monitor_ids", parameterToString(*r.monitorIds, "csv"))
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -232,6 +221,7 @@ The type of monitor chosen from:
 - SLO: `slo alert`
 - watchdog: `event alert`
 - event-v2: `event-v2 alert`
+- audit: `audit alert`
 
 #### Query Types
 
@@ -240,7 +230,7 @@ The type of monitor chosen from:
 Example: `time_aggr(time_window):space_aggr:metric{tags} [by {key}] operator #`
 
 - `time_aggr`: avg, sum, max, min, change, or pct_change
-- `time_window`: `last_#m` (with `#` between 1 and 2880 depending on the monitor type) or `last_#h`(with `#` between 1 and 48 depending on the monitor type), or `last_1d`
+- `time_window`: `last_#m` (with `#` between 1 and 10080 depending on the monitor type) or `last_#h`(with `#` between 1 and 168 depending on the monitor type) or `last_1d`, or `last_1w`
 - `space_aggr`: avg, sum, min, or max
 - `tags`: one or more tags (comma-separated), or *
 - `key`: a 'key' in key:value tag syntax; defines a separate alert for each tag in the group (multi-alert)
@@ -251,7 +241,7 @@ If you are using the `_change_` or `_pct_change_` time aggregator, instead use `
 timeshift):space_aggr:metric{tags} [by {key}] operator #` with:
 
 - `change_aggr` change, pct_change
-- `time_aggr` avg, sum, max, min [Learn more](https://docs.datadoghq.com/monitors/monitor_types/#define-the-conditions)
+- `time_aggr` avg, sum, max, min [Learn more](https://docs.datadoghq.com/monitors/create/types/#define-the-conditions)
 - `time_window` last\_#m (between 1 and 2880 depending on the monitor type), last\_#h (between 1 and 48 depending on the monitor type), or last_#d (1 or 2)
 - `timeshift` #m_ago (5, 10, 15, or 30), #h_ago (1, 2, or 4), or 1d_ago
 
@@ -297,7 +287,7 @@ Example: `events(query).rollup(rollup_method[, measure]).last(time_window) opera
 - **`operator`** `<`, `<=`, `>`, `>=`, `==`, or `!=`.
 - **`#`** an integer or decimal number used to set the threshold.
 
-**NOTE** Only available on US1-FED, US3, and in closed beta on EU and US1.
+**NOTE** Only available on US1-FED, US3, US5 and in closed beta on EU and US1.
 
 **Process Alert Query**
 
@@ -340,6 +330,19 @@ Example: `error_budget("slo_id").over("time_window") operator #`
 - **`slo_id`**: The alphanumeric SLO ID of the SLO you are configuring the alert for.
 - **`time_window`**: The time window of the SLO target you wish to alert on. Valid options: `7d`, `30d`, `90d`.
 - **`operator`**: `>=` or `>`
+
+**Audit Alert Query**
+
+Example: `audits(query).rollup(rollup_method[, measure]).last(time_window) operator #`
+
+- **`query`** The search query - following the [Log search syntax](https://docs.datadoghq.com/logs/search_syntax/).
+- **`rollup_method`** The stats roll-up method - supports `count`, `avg` and `cardinality`.
+- **`measure`** For `avg` and cardinality `rollup_method` - specify the measure or the facet name you want to use.
+- **`time_window`** #m (between 1 and 2880), #h (between 1 and 48).
+- **`operator`** `<`, `<=`, `>`, `>=`, `==`, or `!=`.
+- **`#`** an integer or decimal number used to set the threshold.
+
+**NOTE** Only available on US1-FED and in closed beta on US1, EU, US3, and US5.
 */
 func (a *MonitorsApiService) CreateMonitor(ctx _context.Context, body Monitor) (Monitor, *_nethttp.Response, error) {
 	req := apiCreateMonitorRequest{

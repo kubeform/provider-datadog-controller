@@ -3,7 +3,7 @@ package datadog
 import (
 	"context"
 	"log"
-	"strings"
+	"sync"
 
 	"github.com/terraform-providers/terraform-provider-datadog/datadog/internal/utils"
 
@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var logsIndexMutex = sync.Mutex{}
 
 var indexSchema = map[string]*schema.Schema{
 	"name": {
@@ -48,6 +50,7 @@ var indexSchema = map[string]*schema.Schema{
 		Description: "Logs filter",
 		Type:        schema.TypeList,
 		Required:    true,
+		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"query": {
@@ -101,7 +104,7 @@ var exclusionFilterSchema = map[string]*schema.Schema{
 
 func resourceDatadogLogsIndex() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Provides a Datadog Logs Index API resource. This can be used to create and manage Datadog logs indexes.",
+		Description:   "Provides a Datadog Logs Index API resource. This can be used to create and manage Datadog logs indexes.  \n**Note:** It is not possible to delete logs indexes through Terraform, so an index remains in your account after the resource is removed from your terraform config. Reach out to support to delete a logs index.",
 		CreateContext: resourceDatadogLogsIndexCreate,
 		UpdateContext: resourceDatadogLogsIndexUpdate,
 		ReadContext:   resourceDatadogLogsIndexRead,
@@ -114,13 +117,24 @@ func resourceDatadogLogsIndex() *schema.Resource {
 }
 
 func resourceDatadogLogsIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// This is a bit of a hack to ensure we fail fast if an index is about to be created, and
-	// to ensure we provide a useful error message (and don't panic)
-	// Indexes can only be updated, and the id is only set in the state if it was already imported
-	if _, ok := d.GetOk("id"); !ok {
-		return diag.Errorf("logs index creation is not allowed, please import the index first. index_name: %s", d.Get("name").(string))
+	providerConf := meta.(*ProviderConfiguration)
+	datadogClientV1 := providerConf.DatadogClientV1
+	authV1 := providerConf.AuthV1
+
+	logsIndexMutex.Lock()
+	defer logsIndexMutex.Unlock()
+
+	ddIndex := buildDatadogIndexCreateRequest(d)
+	createdIndex, httpResponse, err := datadogClientV1.LogsIndexesApi.CreateLogsIndex(authV1, *ddIndex)
+	if err != nil {
+		return utils.TranslateClientErrorDiag(err, httpResponse, "error creating logs index")
 	}
-	return resourceDatadogLogsIndexUpdate(ctx, d, meta)
+	if err := utils.CheckForUnparsed(createdIndex); err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(createdIndex.GetName())
+
+	return updateLogsIndexState(d, &createdIndex)
 }
 
 func updateLogsIndexState(d *schema.ResourceData, index *datadogV1.LogsIndex) diag.Diagnostics {
@@ -158,27 +172,29 @@ func resourceDatadogLogsIndexRead(ctx context.Context, d *schema.ResourceData, m
 		}
 		return utils.TranslateClientErrorDiag(err, httpresp, "error getting logs index")
 	}
+	if err := utils.CheckForUnparsed(ddIndex); err != nil {
+		return diag.FromErr(err)
+	}
 	return updateLogsIndexState(d, &ddIndex)
 }
 
 func resourceDatadogLogsIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	ddIndex, err := buildDatadogIndex(d)
-	if err != nil {
-		return diag.Errorf("failed to parse resource configuration: %s", err.Error())
-	}
 	providerConf := meta.(*ProviderConfiguration)
 	datadogClientV1 := providerConf.DatadogClientV1
 	authV1 := providerConf.AuthV1
 
+	logsIndexMutex.Lock()
+	defer logsIndexMutex.Unlock()
+
+	ddIndex := buildDatadogIndexUpdateRequest(d)
 	tfName := d.Get("name").(string)
 	updatedIndex, httpResponse, err := datadogClientV1.LogsIndexesApi.UpdateLogsIndex(authV1, tfName, *ddIndex)
 	if err != nil {
-		if strings.Contains(err.Error(), "404 Not Found") {
-			return diag.Errorf("logs index creation is not allowed, index_name: %s", tfName)
-		}
 		return utils.TranslateClientErrorDiag(err, httpResponse, "error updating logs index")
 	}
-	d.SetId(tfName)
+	if err := utils.CheckForUnparsed(updatedIndex); err != nil {
+		return diag.FromErr(err)
+	}
 	return updateLogsIndexState(d, &updatedIndex)
 }
 
@@ -186,7 +202,7 @@ func resourceDatadogLogsIndexDelete(_ context.Context, _ *schema.ResourceData, _
 	return nil
 }
 
-func buildDatadogIndex(d *schema.ResourceData) (*datadogV1.LogsIndexUpdateRequest, error) {
+func buildDatadogIndexUpdateRequest(d *schema.ResourceData) *datadogV1.LogsIndexUpdateRequest {
 	var ddIndex datadogV1.LogsIndexUpdateRequest
 	if tfFilter := d.Get("filter").([]interface{}); len(tfFilter) > 0 {
 		ddIndex.SetFilter(*buildDatadogIndexFilter(tfFilter[0].(map[string]interface{})))
@@ -203,7 +219,25 @@ func buildDatadogIndex(d *schema.ResourceData) (*datadogV1.LogsIndexUpdateReques
 	}
 
 	ddIndex.ExclusionFilters = buildDatadogExclusionFilters(d.Get("exclusion_filter").([]interface{}))
-	return &ddIndex, nil
+	return &ddIndex
+}
+
+func buildDatadogIndexCreateRequest(d *schema.ResourceData) *datadogV1.LogsIndex {
+	var ddIndex datadogV1.LogsIndex
+
+	ddIndex.SetName(d.Get("name").(string))
+
+	if tfFilter := d.Get("filter").([]interface{}); len(tfFilter) > 0 {
+		ddIndex.SetFilter(*buildDatadogIndexFilter(tfFilter[0].(map[string]interface{})))
+	}
+	if v, ok := d.GetOk("daily_limit"); ok {
+		ddIndex.SetDailyLimit(int64(v.(int)))
+	}
+	if v, ok := d.GetOk("retention_days"); ok {
+		ddIndex.SetNumRetentionDays(int64(v.(int)))
+	}
+	ddIndex.ExclusionFilters = buildDatadogExclusionFilters(d.Get("exclusion_filter").([]interface{}))
+	return &ddIndex
 }
 
 func buildDatadogIndexFilter(tfFilter map[string]interface{}) *datadogV1.LogsFilter {

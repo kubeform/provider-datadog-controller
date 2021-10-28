@@ -15,7 +15,7 @@ import (
 // MetricsQueryMetadata Object containing all metric names returned and their associated metadata.
 type MetricsQueryMetadata struct {
 	// Aggregation type.
-	Aggr *string `json:"aggr,omitempty"`
+	Aggr NullableString `json:"aggr,omitempty"`
 	// Display name of the metric.
 	DisplayName *string `json:"display_name,omitempty"`
 	// End of the time window, milliseconds since Unix epoch.
@@ -29,7 +29,7 @@ type MetricsQueryMetadata struct {
 	// Metric name.
 	Metric *string `json:"metric,omitempty"`
 	// List of points of the time series.
-	Pointlist *[][]float64 `json:"pointlist,omitempty"`
+	Pointlist *[][]*float64 `json:"pointlist,omitempty"`
 	// The index of the series' query within the request.
 	QueryIndex *int64 `json:"query_index,omitempty"`
 	// Metric scope, comma separated list of tags.
@@ -40,6 +40,8 @@ type MetricsQueryMetadata struct {
 	TagSet *[]string `json:"tag_set,omitempty"`
 	// Detailed information about the metric unit. First element describes the \"primary unit\" (for example, `bytes` in `bytes per second`), second describes the \"per unit\" (for example, `second` in `bytes per second`).
 	Unit *[]MetricsQueryUnit `json:"unit,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewMetricsQueryMetadata instantiates a new MetricsQueryMetadata object
@@ -59,36 +61,47 @@ func NewMetricsQueryMetadataWithDefaults() *MetricsQueryMetadata {
 	return &this
 }
 
-// GetAggr returns the Aggr field value if set, zero value otherwise.
+// GetAggr returns the Aggr field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *MetricsQueryMetadata) GetAggr() string {
-	if o == nil || o.Aggr == nil {
+	if o == nil || o.Aggr.Get() == nil {
 		var ret string
 		return ret
 	}
-	return *o.Aggr
+	return *o.Aggr.Get()
 }
 
 // GetAggrOk returns a tuple with the Aggr field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *MetricsQueryMetadata) GetAggrOk() (*string, bool) {
-	if o == nil || o.Aggr == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Aggr, true
+	return o.Aggr.Get(), o.Aggr.IsSet()
 }
 
 // HasAggr returns a boolean if a field has been set.
 func (o *MetricsQueryMetadata) HasAggr() bool {
-	if o != nil && o.Aggr != nil {
+	if o != nil && o.Aggr.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetAggr gets a reference to the given string and assigns it to the Aggr field.
+// SetAggr gets a reference to the given NullableString and assigns it to the Aggr field.
 func (o *MetricsQueryMetadata) SetAggr(v string) {
-	o.Aggr = &v
+	o.Aggr.Set(&v)
+}
+
+// SetAggrNil sets the value for Aggr to be an explicit nil
+func (o *MetricsQueryMetadata) SetAggrNil() {
+	o.Aggr.Set(nil)
+}
+
+// UnsetAggr ensures that no value is present for Aggr, not even an explicit nil
+func (o *MetricsQueryMetadata) UnsetAggr() {
+	o.Aggr.Unset()
 }
 
 // GetDisplayName returns the DisplayName field value if set, zero value otherwise.
@@ -284,9 +297,9 @@ func (o *MetricsQueryMetadata) SetMetric(v string) {
 }
 
 // GetPointlist returns the Pointlist field value if set, zero value otherwise.
-func (o *MetricsQueryMetadata) GetPointlist() [][]float64 {
+func (o *MetricsQueryMetadata) GetPointlist() [][]*float64 {
 	if o == nil || o.Pointlist == nil {
-		var ret [][]float64
+		var ret [][]*float64
 		return ret
 	}
 	return *o.Pointlist
@@ -294,7 +307,7 @@ func (o *MetricsQueryMetadata) GetPointlist() [][]float64 {
 
 // GetPointlistOk returns a tuple with the Pointlist field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *MetricsQueryMetadata) GetPointlistOk() (*[][]float64, bool) {
+func (o *MetricsQueryMetadata) GetPointlistOk() (*[][]*float64, bool) {
 	if o == nil || o.Pointlist == nil {
 		return nil, false
 	}
@@ -310,8 +323,8 @@ func (o *MetricsQueryMetadata) HasPointlist() bool {
 	return false
 }
 
-// SetPointlist gets a reference to the given [][]float64 and assigns it to the Pointlist field.
-func (o *MetricsQueryMetadata) SetPointlist(v [][]float64) {
+// SetPointlist gets a reference to the given [][]*float64 and assigns it to the Pointlist field.
+func (o *MetricsQueryMetadata) SetPointlist(v [][]*float64) {
 	o.Pointlist = &v
 }
 
@@ -477,8 +490,11 @@ func (o *MetricsQueryMetadata) SetUnit(v []MetricsQueryUnit) {
 
 func (o MetricsQueryMetadata) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Aggr != nil {
-		toSerialize["aggr"] = o.Aggr
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
+	if o.Aggr.IsSet() {
+		toSerialize["aggr"] = o.Aggr.Get()
 	}
 	if o.DisplayName != nil {
 		toSerialize["display_name"] = o.DisplayName
@@ -517,6 +533,48 @@ func (o MetricsQueryMetadata) MarshalJSON() ([]byte, error) {
 		toSerialize["unit"] = o.Unit
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *MetricsQueryMetadata) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Aggr        NullableString      `json:"aggr,omitempty"`
+		DisplayName *string             `json:"display_name,omitempty"`
+		End         *int64              `json:"end,omitempty"`
+		Expression  *string             `json:"expression,omitempty"`
+		Interval    *int64              `json:"interval,omitempty"`
+		Length      *int64              `json:"length,omitempty"`
+		Metric      *string             `json:"metric,omitempty"`
+		Pointlist   *[][]*float64       `json:"pointlist,omitempty"`
+		QueryIndex  *int64              `json:"query_index,omitempty"`
+		Scope       *string             `json:"scope,omitempty"`
+		Start       *int64              `json:"start,omitempty"`
+		TagSet      *[]string           `json:"tag_set,omitempty"`
+		Unit        *[]MetricsQueryUnit `json:"unit,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Aggr = all.Aggr
+	o.DisplayName = all.DisplayName
+	o.End = all.End
+	o.Expression = all.Expression
+	o.Interval = all.Interval
+	o.Length = all.Length
+	o.Metric = all.Metric
+	o.Pointlist = all.Pointlist
+	o.QueryIndex = all.QueryIndex
+	o.Scope = all.Scope
+	o.Start = all.Start
+	o.TagSet = all.TagSet
+	o.Unit = all.Unit
+	return nil
 }
 
 type NullableMetricsQueryMetadata struct {

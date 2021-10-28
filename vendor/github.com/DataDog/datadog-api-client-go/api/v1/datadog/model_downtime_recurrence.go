@@ -16,7 +16,7 @@ import (
 type DowntimeRecurrence struct {
 	// How often to repeat as an integer. For example, to repeat every 3 days, select a type of `days` and a period of `3`.
 	Period *int32 `json:"period,omitempty"`
-	// The `RRULE` standard for defining recurring events (**requires to set \"type\" to rrule**) For example, to have a recurring event on the first day of each month, set the type to `rrule` and set the `FREQ` to `MONTHLY` and `BYMONTHDAY` to `1`. Most common `rrule` options from the [iCalendar Spec](https://tools.ietf.org/html/rfc5545) are supported.  **Note**: Attributes specifying the duration in `RRULE` are not supported (for example, `DTSTART`, `DTEND`, `DURATION`). More examples available in this [downtime guide](https://docs.datadoghq.com/monitors/guide/supress-alert-with-downtimes/?tab=api)
+	// The `RRULE` standard for defining recurring events (**requires to set \"type\" to rrule**) For example, to have a recurring event on the first day of each month, set the type to `rrule` and set the `FREQ` to `MONTHLY` and `BYMONTHDAY` to `1`. Most common `rrule` options from the [iCalendar Spec](https://tools.ietf.org/html/rfc5545) are supported.  **Note**: Attributes specifying the duration in `RRULE` are not supported (for example, `DTSTART`, `DTEND`, `DURATION`). More examples available in this [downtime guide](https://docs.datadoghq.com/monitors/guide/suppress-alert-with-downtimes/?tab=api)
 	Rrule *string `json:"rrule,omitempty"`
 	// The type of recurrence. Choose from `days`, `weeks`, `months`, `years`, `rrule`.
 	Type *string `json:"type,omitempty"`
@@ -26,6 +26,8 @@ type DowntimeRecurrence struct {
 	UntilOccurrences NullableInt32 `json:"until_occurrences,omitempty"`
 	// A list of week days to repeat on. Choose from `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat` or `Sun`. Only applicable when type is weeks. First letter must be capitalized.
 	WeekDays *[]string `json:"week_days,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewDowntimeRecurrence instantiates a new DowntimeRecurrence object
@@ -261,6 +263,9 @@ func (o *DowntimeRecurrence) SetWeekDays(v []string) {
 
 func (o DowntimeRecurrence) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Period != nil {
 		toSerialize["period"] = o.Period
 	}
@@ -280,6 +285,34 @@ func (o DowntimeRecurrence) MarshalJSON() ([]byte, error) {
 		toSerialize["week_days"] = o.WeekDays
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *DowntimeRecurrence) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Period           *int32        `json:"period,omitempty"`
+		Rrule            *string       `json:"rrule,omitempty"`
+		Type             *string       `json:"type,omitempty"`
+		UntilDate        NullableInt64 `json:"until_date,omitempty"`
+		UntilOccurrences NullableInt32 `json:"until_occurrences,omitempty"`
+		WeekDays         *[]string     `json:"week_days,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Period = all.Period
+	o.Rrule = all.Rrule
+	o.Type = all.Type
+	o.UntilDate = all.UntilDate
+	o.UntilOccurrences = all.UntilOccurrences
+	o.WeekDays = all.WeekDays
+	return nil
 }
 
 type NullableDowntimeRecurrence struct {

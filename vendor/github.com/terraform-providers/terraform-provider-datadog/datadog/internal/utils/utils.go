@@ -47,6 +47,14 @@ func TranslateClientError(err error, httpresp *http.Response, msg string) error 
 	return fmt.Errorf(msg+": %s", err.Error())
 }
 
+// CheckForUnparsed takes in a API response object and returns an error if it contains an unparsed element
+func CheckForUnparsed(resp interface{}) error {
+	if unparsed, invalidPart := datadogV1.ContainsUnparsedObject(resp); unparsed {
+		return fmt.Errorf("object contains unparsed element: %+v", invalidPart)
+	}
+	return nil
+}
+
 // TranslateClientErrorDiag returns client error as type diag.Diagnostics
 func TranslateClientErrorDiag(err error, httpresp *http.Response, msg string) diag.Diagnostics {
 	return diag.FromErr(TranslateClientError(err, httpresp, msg))
@@ -133,4 +141,15 @@ func ConvertResponseByteToMap(b []byte) (map[string]interface{}, error) {
 	}
 
 	return convertedMap, nil
+}
+
+// DeleteKeyInMap deletes key (in dot notation) in map
+func DeleteKeyInMap(mapObject map[string]interface{}, keyList []string) {
+	if len(keyList) == 1 {
+		delete(mapObject, keyList[0])
+	} else if m, ok := mapObject[keyList[0]].(map[string]interface{}); ok {
+		DeleteKeyInMap(m, keyList[1:])
+	}
+
+	return
 }

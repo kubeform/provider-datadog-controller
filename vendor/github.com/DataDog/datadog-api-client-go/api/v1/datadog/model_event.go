@@ -23,6 +23,8 @@ type Event struct {
 	Host *string `json:"host,omitempty"`
 	// Integer ID of the event.
 	Id *int64 `json:"id,omitempty"`
+	// Handling IDs as large 64-bit numbers can cause loss of accuracy issues with some programming languages. Instead, use the string representation of the Event ID to avoid losing accuracy.
+	IdStr *string `json:"id_str,omitempty"`
 	// Payload of the event.
 	Payload  *string        `json:"payload,omitempty"`
 	Priority *EventPriority `json:"priority,omitempty"`
@@ -32,10 +34,12 @@ type Event struct {
 	Tags *[]string `json:"tags,omitempty"`
 	// The body of the event. Limited to 4000 characters. The text supports markdown. To use markdown in the event text, start the text block with `%%% \\n` and end the text block with `\\n %%%`. Use `msg_text` with the Datadog Ruby library.
 	Text *string `json:"text,omitempty"`
-	// The event title. Limited to 100 characters. Use `msg_title` with the Datadog Ruby library.
+	// The event title.
 	Title *string `json:"title,omitempty"`
 	// URL of the event.
 	Url *string `json:"url,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewEvent instantiates a new Event object
@@ -213,6 +217,38 @@ func (o *Event) HasId() bool {
 // SetId gets a reference to the given int64 and assigns it to the Id field.
 func (o *Event) SetId(v int64) {
 	o.Id = &v
+}
+
+// GetIdStr returns the IdStr field value if set, zero value otherwise.
+func (o *Event) GetIdStr() string {
+	if o == nil || o.IdStr == nil {
+		var ret string
+		return ret
+	}
+	return *o.IdStr
+}
+
+// GetIdStrOk returns a tuple with the IdStr field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Event) GetIdStrOk() (*string, bool) {
+	if o == nil || o.IdStr == nil {
+		return nil, false
+	}
+	return o.IdStr, true
+}
+
+// HasIdStr returns a boolean if a field has been set.
+func (o *Event) HasIdStr() bool {
+	if o != nil && o.IdStr != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIdStr gets a reference to the given string and assigns it to the IdStr field.
+func (o *Event) SetIdStr(v string) {
+	o.IdStr = &v
 }
 
 // GetPayload returns the Payload field value if set, zero value otherwise.
@@ -441,6 +477,9 @@ func (o *Event) SetUrl(v string) {
 
 func (o Event) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.AlertType != nil {
 		toSerialize["alert_type"] = o.AlertType
 	}
@@ -455,6 +494,9 @@ func (o Event) MarshalJSON() ([]byte, error) {
 	}
 	if o.Id != nil {
 		toSerialize["id"] = o.Id
+	}
+	if o.IdStr != nil {
+		toSerialize["id_str"] = o.IdStr
 	}
 	if o.Payload != nil {
 		toSerialize["payload"] = o.Payload
@@ -478,6 +520,64 @@ func (o Event) MarshalJSON() ([]byte, error) {
 		toSerialize["url"] = o.Url
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *Event) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		AlertType      *EventAlertType `json:"alert_type,omitempty"`
+		DateHappened   *int64          `json:"date_happened,omitempty"`
+		DeviceName     *string         `json:"device_name,omitempty"`
+		Host           *string         `json:"host,omitempty"`
+		Id             *int64          `json:"id,omitempty"`
+		IdStr          *string         `json:"id_str,omitempty"`
+		Payload        *string         `json:"payload,omitempty"`
+		Priority       *EventPriority  `json:"priority,omitempty"`
+		SourceTypeName *string         `json:"source_type_name,omitempty"`
+		Tags           *[]string       `json:"tags,omitempty"`
+		Text           *string         `json:"text,omitempty"`
+		Title          *string         `json:"title,omitempty"`
+		Url            *string         `json:"url,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.AlertType; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Priority; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.AlertType = all.AlertType
+	o.DateHappened = all.DateHappened
+	o.DeviceName = all.DeviceName
+	o.Host = all.Host
+	o.Id = all.Id
+	o.IdStr = all.IdStr
+	o.Payload = all.Payload
+	o.Priority = all.Priority
+	o.SourceTypeName = all.SourceTypeName
+	o.Tags = all.Tags
+	o.Text = all.Text
+	o.Title = all.Title
+	o.Url = all.Url
+	return nil
 }
 
 type NullableEvent struct {

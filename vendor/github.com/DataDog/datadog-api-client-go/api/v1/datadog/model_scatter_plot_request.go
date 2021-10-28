@@ -14,17 +14,19 @@ import (
 
 // ScatterPlotRequest Updated scatter plot.
 type ScatterPlotRequest struct {
-	Aggregator          *WidgetAggregator       `json:"aggregator,omitempty"`
-	ApmQuery            *LogQueryDefinition     `json:"apm_query,omitempty"`
-	EventQuery          *LogQueryDefinition     `json:"event_query,omitempty"`
-	LogQuery            *LogQueryDefinition     `json:"log_query,omitempty"`
-	NetworkQuery        *LogQueryDefinition     `json:"network_query,omitempty"`
-	ProcessQuery        *ProcessQueryDefinition `json:"process_query,omitempty"`
-	ProfileMetricsQuery *LogQueryDefinition     `json:"profile_metrics_query,omitempty"`
+	Aggregator          *ScatterplotWidgetAggregator `json:"aggregator,omitempty"`
+	ApmQuery            *LogQueryDefinition          `json:"apm_query,omitempty"`
+	EventQuery          *LogQueryDefinition          `json:"event_query,omitempty"`
+	LogQuery            *LogQueryDefinition          `json:"log_query,omitempty"`
+	NetworkQuery        *LogQueryDefinition          `json:"network_query,omitempty"`
+	ProcessQuery        *ProcessQueryDefinition      `json:"process_query,omitempty"`
+	ProfileMetricsQuery *LogQueryDefinition          `json:"profile_metrics_query,omitempty"`
 	// Query definition.
 	Q             *string             `json:"q,omitempty"`
 	RumQuery      *LogQueryDefinition `json:"rum_query,omitempty"`
 	SecurityQuery *LogQueryDefinition `json:"security_query,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewScatterPlotRequest instantiates a new ScatterPlotRequest object
@@ -45,9 +47,9 @@ func NewScatterPlotRequestWithDefaults() *ScatterPlotRequest {
 }
 
 // GetAggregator returns the Aggregator field value if set, zero value otherwise.
-func (o *ScatterPlotRequest) GetAggregator() WidgetAggregator {
+func (o *ScatterPlotRequest) GetAggregator() ScatterplotWidgetAggregator {
 	if o == nil || o.Aggregator == nil {
-		var ret WidgetAggregator
+		var ret ScatterplotWidgetAggregator
 		return ret
 	}
 	return *o.Aggregator
@@ -55,7 +57,7 @@ func (o *ScatterPlotRequest) GetAggregator() WidgetAggregator {
 
 // GetAggregatorOk returns a tuple with the Aggregator field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ScatterPlotRequest) GetAggregatorOk() (*WidgetAggregator, bool) {
+func (o *ScatterPlotRequest) GetAggregatorOk() (*ScatterplotWidgetAggregator, bool) {
 	if o == nil || o.Aggregator == nil {
 		return nil, false
 	}
@@ -71,8 +73,8 @@ func (o *ScatterPlotRequest) HasAggregator() bool {
 	return false
 }
 
-// SetAggregator gets a reference to the given WidgetAggregator and assigns it to the Aggregator field.
-func (o *ScatterPlotRequest) SetAggregator(v WidgetAggregator) {
+// SetAggregator gets a reference to the given ScatterplotWidgetAggregator and assigns it to the Aggregator field.
+func (o *ScatterPlotRequest) SetAggregator(v ScatterplotWidgetAggregator) {
 	o.Aggregator = &v
 }
 
@@ -366,6 +368,9 @@ func (o *ScatterPlotRequest) SetSecurityQuery(v LogQueryDefinition) {
 
 func (o ScatterPlotRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Aggregator != nil {
 		toSerialize["aggregator"] = o.Aggregator
 	}
@@ -397,6 +402,50 @@ func (o ScatterPlotRequest) MarshalJSON() ([]byte, error) {
 		toSerialize["security_query"] = o.SecurityQuery
 	}
 	return json.Marshal(toSerialize)
+}
+
+func (o *ScatterPlotRequest) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	all := struct {
+		Aggregator          *ScatterplotWidgetAggregator `json:"aggregator,omitempty"`
+		ApmQuery            *LogQueryDefinition          `json:"apm_query,omitempty"`
+		EventQuery          *LogQueryDefinition          `json:"event_query,omitempty"`
+		LogQuery            *LogQueryDefinition          `json:"log_query,omitempty"`
+		NetworkQuery        *LogQueryDefinition          `json:"network_query,omitempty"`
+		ProcessQuery        *ProcessQueryDefinition      `json:"process_query,omitempty"`
+		ProfileMetricsQuery *LogQueryDefinition          `json:"profile_metrics_query,omitempty"`
+		Q                   *string                      `json:"q,omitempty"`
+		RumQuery            *LogQueryDefinition          `json:"rum_query,omitempty"`
+		SecurityQuery       *LogQueryDefinition          `json:"security_query,omitempty"`
+	}{}
+	err = json.Unmarshal(bytes, &all)
+	if err != nil {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Aggregator; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	o.Aggregator = all.Aggregator
+	o.ApmQuery = all.ApmQuery
+	o.EventQuery = all.EventQuery
+	o.LogQuery = all.LogQuery
+	o.NetworkQuery = all.NetworkQuery
+	o.ProcessQuery = all.ProcessQuery
+	o.ProfileMetricsQuery = all.ProfileMetricsQuery
+	o.Q = all.Q
+	o.RumQuery = all.RumQuery
+	o.SecurityQuery = all.SecurityQuery
+	return nil
 }
 
 type NullableScatterPlotRequest struct {

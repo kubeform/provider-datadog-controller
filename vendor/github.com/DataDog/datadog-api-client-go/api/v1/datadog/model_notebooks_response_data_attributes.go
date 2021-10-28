@@ -20,13 +20,16 @@ type NotebooksResponseDataAttributes struct {
 	// List of cells to display in the notebook.
 	Cells *[]NotebookCellResponse `json:"cells,omitempty"`
 	// UTC time stamp for when the notebook was created.
-	Created *time.Time `json:"created,omitempty"`
+	Created  *time.Time        `json:"created,omitempty"`
+	Metadata *NotebookMetadata `json:"metadata,omitempty"`
 	// UTC time stamp for when the notebook was last modified.
 	Modified *time.Time `json:"modified,omitempty"`
 	// The name of the notebook.
 	Name   string              `json:"name"`
 	Status *NotebookStatus     `json:"status,omitempty"`
 	Time   *NotebookGlobalTime `json:"time,omitempty"`
+	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
+	UnparsedObject map[string]interface{} `json:-`
 }
 
 // NewNotebooksResponseDataAttributes instantiates a new NotebooksResponseDataAttributes object
@@ -145,6 +148,38 @@ func (o *NotebooksResponseDataAttributes) HasCreated() bool {
 // SetCreated gets a reference to the given time.Time and assigns it to the Created field.
 func (o *NotebooksResponseDataAttributes) SetCreated(v time.Time) {
 	o.Created = &v
+}
+
+// GetMetadata returns the Metadata field value if set, zero value otherwise.
+func (o *NotebooksResponseDataAttributes) GetMetadata() NotebookMetadata {
+	if o == nil || o.Metadata == nil {
+		var ret NotebookMetadata
+		return ret
+	}
+	return *o.Metadata
+}
+
+// GetMetadataOk returns a tuple with the Metadata field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *NotebooksResponseDataAttributes) GetMetadataOk() (*NotebookMetadata, bool) {
+	if o == nil || o.Metadata == nil {
+		return nil, false
+	}
+	return o.Metadata, true
+}
+
+// HasMetadata returns a boolean if a field has been set.
+func (o *NotebooksResponseDataAttributes) HasMetadata() bool {
+	if o != nil && o.Metadata != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadata gets a reference to the given NotebookMetadata and assigns it to the Metadata field.
+func (o *NotebooksResponseDataAttributes) SetMetadata(v NotebookMetadata) {
+	o.Metadata = &v
 }
 
 // GetModified returns the Modified field value if set, zero value otherwise.
@@ -269,6 +304,9 @@ func (o *NotebooksResponseDataAttributes) SetTime(v NotebookGlobalTime) {
 
 func (o NotebooksResponseDataAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.UnparsedObject != nil {
+		return json.Marshal(o.UnparsedObject)
+	}
 	if o.Author != nil {
 		toSerialize["author"] = o.Author
 	}
@@ -277,6 +315,9 @@ func (o NotebooksResponseDataAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if o.Created != nil {
 		toSerialize["created"] = o.Created
+	}
+	if o.Metadata != nil {
+		toSerialize["metadata"] = o.Metadata
 	}
 	if o.Modified != nil {
 		toSerialize["modified"] = o.Modified
@@ -294,6 +335,7 @@ func (o NotebooksResponseDataAttributes) MarshalJSON() ([]byte, error) {
 }
 
 func (o *NotebooksResponseDataAttributes) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
 	required := struct {
 		Name *string `json:"name"`
 	}{}
@@ -301,6 +343,7 @@ func (o *NotebooksResponseDataAttributes) UnmarshalJSON(bytes []byte) (err error
 		Author   *NotebookAuthor         `json:"author,omitempty"`
 		Cells    *[]NotebookCellResponse `json:"cells,omitempty"`
 		Created  *time.Time              `json:"created,omitempty"`
+		Metadata *NotebookMetadata       `json:"metadata,omitempty"`
 		Modified *time.Time              `json:"modified,omitempty"`
 		Name     string                  `json:"name"`
 		Status   *NotebookStatus         `json:"status,omitempty"`
@@ -315,11 +358,25 @@ func (o *NotebooksResponseDataAttributes) UnmarshalJSON(bytes []byte) (err error
 	}
 	err = json.Unmarshal(bytes, &all)
 	if err != nil {
-		return err
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
+	}
+	if v := all.Status; v != nil && !v.IsValid() {
+		err = json.Unmarshal(bytes, &raw)
+		if err != nil {
+			return err
+		}
+		o.UnparsedObject = raw
+		return nil
 	}
 	o.Author = all.Author
 	o.Cells = all.Cells
 	o.Created = all.Created
+	o.Metadata = all.Metadata
 	o.Modified = all.Modified
 	o.Name = all.Name
 	o.Status = all.Status

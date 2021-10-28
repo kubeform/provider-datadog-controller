@@ -10,6 +10,8 @@ package datadog
 
 import (
 	"bytes"
+	"compress/gzip"
+	"compress/zlib"
 	"context"
 	"encoding/json"
 	"encoding/xml"
@@ -103,6 +105,8 @@ type APIClient struct {
 	UsageMeteringApi *UsageMeteringApiService
 
 	UsersApi *UsersApiService
+
+	WebhooksIntegrationApi *WebhooksIntegrationApiService
 }
 
 type service struct {
@@ -150,6 +154,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.TagsApi = (*TagsApiService)(&c.common)
 	c.UsageMeteringApi = (*UsageMeteringApiService)(&c.common)
 	c.UsersApi = (*UsersApiService)(&c.common)
+	c.WebhooksIntegrationApi = (*WebhooksIntegrationApiService)(&c.common)
 
 	return c
 }
@@ -182,7 +187,7 @@ func selectHeaderAccept(accepts []string) string {
 	return strings.Join(accepts, ",")
 }
 
-// contains is a case insenstive match, finding needle in a haystack
+// contains is a case insensitive match, finding needle in a haystack
 func contains(haystack []string, needle string) bool {
 	for _, a := range haystack {
 		if strings.ToLower(a) == strings.ToLower(needle) {
@@ -386,6 +391,29 @@ func (c *APIClient) PrepareRequest(
 
 	// Generate a new request
 	if body != nil {
+		if headerParams["Content-Encoding"] == "gzip" {
+			var buf bytes.Buffer
+			compressor := gzip.NewWriter(&buf)
+			if _, err = compressor.Write(body.Bytes()); err != nil {
+				return nil, err
+			}
+			if err = compressor.Close(); err != nil {
+				return nil, err
+			}
+			body = &buf
+
+		} else if headerParams["Content-Encoding"] == "deflate" {
+			var buf bytes.Buffer
+			compressor := zlib.NewWriter(&buf)
+			if _, err = compressor.Write(body.Bytes()); err != nil {
+				return nil, err
+			}
+			if err = compressor.Close(); err != nil {
+				return nil, err
+			}
+			body = &buf
+		}
+		headerParams["Content-Length"] = fmt.Sprintf("%d", body.Len())
 		localVarRequest, err = http.NewRequest(method, url.String(), body)
 	} else {
 		localVarRequest, err = http.NewRequest(method, url.String(), nil)
@@ -437,6 +465,11 @@ func (c *APIClient) PrepareRequest(
 
 	for header, value := range c.cfg.DefaultHeader {
 		localVarRequest.Header.Add(header, value)
+	}
+
+	if !c.cfg.Compress {
+		// gzip is on by default, so disable it by setting encoding to identity
+		localVarRequest.Header.Add("Accept-Encoding", "identity")
 	}
 	return localVarRequest, nil
 }

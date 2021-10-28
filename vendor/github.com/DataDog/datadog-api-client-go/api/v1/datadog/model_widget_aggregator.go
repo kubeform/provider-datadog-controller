@@ -18,11 +18,12 @@ type WidgetAggregator string
 
 // List of WidgetAggregator
 const (
-	WIDGETAGGREGATOR_AVERAGE WidgetAggregator = "avg"
-	WIDGETAGGREGATOR_LAST    WidgetAggregator = "last"
-	WIDGETAGGREGATOR_MAXIMUM WidgetAggregator = "max"
-	WIDGETAGGREGATOR_MINIMUM WidgetAggregator = "min"
-	WIDGETAGGREGATOR_SUM     WidgetAggregator = "sum"
+	WIDGETAGGREGATOR_AVERAGE    WidgetAggregator = "avg"
+	WIDGETAGGREGATOR_LAST       WidgetAggregator = "last"
+	WIDGETAGGREGATOR_MAXIMUM    WidgetAggregator = "max"
+	WIDGETAGGREGATOR_MINIMUM    WidgetAggregator = "min"
+	WIDGETAGGREGATOR_SUM        WidgetAggregator = "sum"
+	WIDGETAGGREGATOR_PERCENTILE WidgetAggregator = "percentile"
 )
 
 var allowedWidgetAggregatorEnumValues = []WidgetAggregator{
@@ -31,6 +32,7 @@ var allowedWidgetAggregatorEnumValues = []WidgetAggregator{
 	"max",
 	"min",
 	"sum",
+	"percentile",
 }
 
 func (w *WidgetAggregator) GetAllowedValues() []WidgetAggregator {
@@ -43,15 +45,8 @@ func (v *WidgetAggregator) UnmarshalJSON(src []byte) error {
 	if err != nil {
 		return err
 	}
-	enumTypeValue := WidgetAggregator(value)
-	for _, existing := range allowedWidgetAggregatorEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid WidgetAggregator", value)
+	*v = WidgetAggregator(value)
+	return nil
 }
 
 // NewWidgetAggregatorFromValue returns a pointer to a valid WidgetAggregator
