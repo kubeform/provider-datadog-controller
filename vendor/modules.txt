@@ -1308,7 +1308,7 @@ kmodules.xyz/resource-metrics/api
 ## explicit
 kubeform.dev/apimachinery/api/v1alpha1
 kubeform.dev/apimachinery/pkg/util
-# kubeform.dev/provider-datadog-api v0.3.1-0.20211028194524-e47c42c8ddff
+# kubeform.dev/provider-datadog-api v0.4.0
 ## explicit
 kubeform.dev/provider-datadog-api/api/provider
 kubeform.dev/provider-datadog-api/apis/apikey
