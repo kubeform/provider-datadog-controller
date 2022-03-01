@@ -46,338 +46,336 @@ type Data struct {
 	ResourceType string
 }
 
-var (
-	allJsonIt = map[schema.GroupVersionResource]Data{
-		{
-			Group:    "apikey.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "apikeys",
-		}: {
-			JsonIt:       controllers.GetJSONItr(apikeyv1alpha1.GetEncoder(), apikeyv1alpha1.GetDecoder()),
-			ResourceType: "datadog_api_key",
-		},
-		{
-			Group:    "application.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "keys",
-		}: {
-			JsonIt:       controllers.GetJSONItr(applicationv1alpha1.GetEncoder(), applicationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_application_key",
-		},
-		{
-			Group:    "child.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "organizations",
-		}: {
-			JsonIt:       controllers.GetJSONItr(childv1alpha1.GetEncoder(), childv1alpha1.GetDecoder()),
-			ResourceType: "datadog_child_organization",
-		},
-		{
-			Group:    "dashboard.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "dashboards",
-		}: {
-			JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
-			ResourceType: "datadog_dashboard",
-		},
-		{
-			Group:    "dashboard.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "jsons",
-		}: {
-			JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
-			ResourceType: "datadog_dashboard_json",
-		},
-		{
-			Group:    "dashboard.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "lists",
-		}: {
-			JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
-			ResourceType: "datadog_dashboard_list",
-		},
-		{
-			Group:    "downtime.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "downtimes",
-		}: {
-			JsonIt:       controllers.GetJSONItr(downtimev1alpha1.GetEncoder(), downtimev1alpha1.GetDecoder()),
-			ResourceType: "datadog_downtime",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "aws",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_aws",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "awslambdaarns",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_aws_lambda_arn",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "awslogcollections",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_aws_log_collection",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "awstagfilters",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_aws_tag_filter",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "azures",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_azure",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "gcps",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_gcp",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "pagerduties",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_pagerduty",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "pagerdutyserviceobjects",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_pagerduty_service_object",
-		},
-		{
-			Group:    "integration.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "slackchannels",
-		}: {
-			JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_integration_slack_channel",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "archives",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_archive",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "archiveorders",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_archive_order",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "custompipelines",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_custom_pipeline",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "indices",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_index",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "indexorders",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_index_order",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "integrationpipelines",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_integration_pipeline",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "metrics",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_metric",
-		},
-		{
-			Group:    "logs.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "pipelineorders",
-		}: {
-			JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_logs_pipeline_order",
-		},
-		{
-			Group:    "metric.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "metadata",
-		}: {
-			JsonIt:       controllers.GetJSONItr(metricv1alpha1.GetEncoder(), metricv1alpha1.GetDecoder()),
-			ResourceType: "datadog_metric_metadata",
-		},
-		{
-			Group:    "metric.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "tagconfigurations",
-		}: {
-			JsonIt:       controllers.GetJSONItr(metricv1alpha1.GetEncoder(), metricv1alpha1.GetDecoder()),
-			ResourceType: "datadog_metric_tag_configuration",
-		},
-		{
-			Group:    "monitor.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "monitors",
-		}: {
-			JsonIt:       controllers.GetJSONItr(monitorv1alpha1.GetEncoder(), monitorv1alpha1.GetDecoder()),
-			ResourceType: "datadog_monitor",
-		},
-		{
-			Group:    "monitor.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "jsons",
-		}: {
-			JsonIt:       controllers.GetJSONItr(monitorv1alpha1.GetEncoder(), monitorv1alpha1.GetDecoder()),
-			ResourceType: "datadog_monitor_json",
-		},
-		{
-			Group:    "organization.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "settings",
-		}: {
-			JsonIt:       controllers.GetJSONItr(organizationv1alpha1.GetEncoder(), organizationv1alpha1.GetDecoder()),
-			ResourceType: "datadog_organization_settings",
-		},
-		{
-			Group:    "role.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "roles",
-		}: {
-			JsonIt:       controllers.GetJSONItr(rolev1alpha1.GetEncoder(), rolev1alpha1.GetDecoder()),
-			ResourceType: "datadog_role",
-		},
-		{
-			Group:    "security.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "monitoringdefaultrules",
-		}: {
-			JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
-			ResourceType: "datadog_security_monitoring_default_rule",
-		},
-		{
-			Group:    "security.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "monitoringfilters",
-		}: {
-			JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
-			ResourceType: "datadog_security_monitoring_filter",
-		},
-		{
-			Group:    "security.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "monitoringrules",
-		}: {
-			JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
-			ResourceType: "datadog_security_monitoring_rule",
-		},
-		{
-			Group:    "service.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "levelobjectives",
-		}: {
-			JsonIt:       controllers.GetJSONItr(servicev1alpha1.GetEncoder(), servicev1alpha1.GetDecoder()),
-			ResourceType: "datadog_service_level_objective",
-		},
-		{
-			Group:    "slo.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "corrections",
-		}: {
-			JsonIt:       controllers.GetJSONItr(slov1alpha1.GetEncoder(), slov1alpha1.GetDecoder()),
-			ResourceType: "datadog_slo_correction",
-		},
-		{
-			Group:    "synthetics.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "globalvariables",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_synthetics_global_variable",
-		},
-		{
-			Group:    "synthetics.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "privatelocations",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_synthetics_private_location",
-		},
-		{
-			Group:    "synthetics.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "syntheticstests",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "datadog_synthetics_test",
-		},
-		{
-			Group:    "user.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "users",
-		}: {
-			JsonIt:       controllers.GetJSONItr(userv1alpha1.GetEncoder(), userv1alpha1.GetDecoder()),
-			ResourceType: "datadog_user",
-		},
-		{
-			Group:    "webhook.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "webhooks",
-		}: {
-			JsonIt:       controllers.GetJSONItr(webhookv1alpha1.GetEncoder(), webhookv1alpha1.GetDecoder()),
-			ResourceType: "datadog_webhook",
-		},
-		{
-			Group:    "webhook.datadog.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "customvariables",
-		}: {
-			JsonIt:       controllers.GetJSONItr(webhookv1alpha1.GetEncoder(), webhookv1alpha1.GetDecoder()),
-			ResourceType: "datadog_webhook_custom_variable",
-		},
-	}
-)
+var allJsonIt = map[schema.GroupVersionResource]Data{
+	{
+		Group:    "apikey.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "apikeys",
+	}: {
+		JsonIt:       controllers.GetJSONItr(apikeyv1alpha1.GetEncoder(), apikeyv1alpha1.GetDecoder()),
+		ResourceType: "datadog_api_key",
+	},
+	{
+		Group:    "application.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "keys",
+	}: {
+		JsonIt:       controllers.GetJSONItr(applicationv1alpha1.GetEncoder(), applicationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_application_key",
+	},
+	{
+		Group:    "child.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "organizations",
+	}: {
+		JsonIt:       controllers.GetJSONItr(childv1alpha1.GetEncoder(), childv1alpha1.GetDecoder()),
+		ResourceType: "datadog_child_organization",
+	},
+	{
+		Group:    "dashboard.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "dashboards",
+	}: {
+		JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
+		ResourceType: "datadog_dashboard",
+	},
+	{
+		Group:    "dashboard.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "jsons",
+	}: {
+		JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
+		ResourceType: "datadog_dashboard_json",
+	},
+	{
+		Group:    "dashboard.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "lists",
+	}: {
+		JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
+		ResourceType: "datadog_dashboard_list",
+	},
+	{
+		Group:    "downtime.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "downtimes",
+	}: {
+		JsonIt:       controllers.GetJSONItr(downtimev1alpha1.GetEncoder(), downtimev1alpha1.GetDecoder()),
+		ResourceType: "datadog_downtime",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "aws",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_aws",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "awslambdaarns",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_aws_lambda_arn",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "awslogcollections",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_aws_log_collection",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "awstagfilters",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_aws_tag_filter",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "azures",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_azure",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "gcps",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_gcp",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "pagerduties",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_pagerduty",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "pagerdutyserviceobjects",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_pagerduty_service_object",
+	},
+	{
+		Group:    "integration.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "slackchannels",
+	}: {
+		JsonIt:       controllers.GetJSONItr(integrationv1alpha1.GetEncoder(), integrationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_integration_slack_channel",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "archives",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_archive",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "archiveorders",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_archive_order",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "custompipelines",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_custom_pipeline",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "indices",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_index",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "indexorders",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_index_order",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "integrationpipelines",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_integration_pipeline",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "metrics",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_metric",
+	},
+	{
+		Group:    "logs.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "pipelineorders",
+	}: {
+		JsonIt:       controllers.GetJSONItr(logsv1alpha1.GetEncoder(), logsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_logs_pipeline_order",
+	},
+	{
+		Group:    "metric.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "metadata",
+	}: {
+		JsonIt:       controllers.GetJSONItr(metricv1alpha1.GetEncoder(), metricv1alpha1.GetDecoder()),
+		ResourceType: "datadog_metric_metadata",
+	},
+	{
+		Group:    "metric.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "tagconfigurations",
+	}: {
+		JsonIt:       controllers.GetJSONItr(metricv1alpha1.GetEncoder(), metricv1alpha1.GetDecoder()),
+		ResourceType: "datadog_metric_tag_configuration",
+	},
+	{
+		Group:    "monitor.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "monitors",
+	}: {
+		JsonIt:       controllers.GetJSONItr(monitorv1alpha1.GetEncoder(), monitorv1alpha1.GetDecoder()),
+		ResourceType: "datadog_monitor",
+	},
+	{
+		Group:    "monitor.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "jsons",
+	}: {
+		JsonIt:       controllers.GetJSONItr(monitorv1alpha1.GetEncoder(), monitorv1alpha1.GetDecoder()),
+		ResourceType: "datadog_monitor_json",
+	},
+	{
+		Group:    "organization.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "settings",
+	}: {
+		JsonIt:       controllers.GetJSONItr(organizationv1alpha1.GetEncoder(), organizationv1alpha1.GetDecoder()),
+		ResourceType: "datadog_organization_settings",
+	},
+	{
+		Group:    "role.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "roles",
+	}: {
+		JsonIt:       controllers.GetJSONItr(rolev1alpha1.GetEncoder(), rolev1alpha1.GetDecoder()),
+		ResourceType: "datadog_role",
+	},
+	{
+		Group:    "security.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "monitoringdefaultrules",
+	}: {
+		JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
+		ResourceType: "datadog_security_monitoring_default_rule",
+	},
+	{
+		Group:    "security.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "monitoringfilters",
+	}: {
+		JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
+		ResourceType: "datadog_security_monitoring_filter",
+	},
+	{
+		Group:    "security.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "monitoringrules",
+	}: {
+		JsonIt:       controllers.GetJSONItr(securityv1alpha1.GetEncoder(), securityv1alpha1.GetDecoder()),
+		ResourceType: "datadog_security_monitoring_rule",
+	},
+	{
+		Group:    "service.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "levelobjectives",
+	}: {
+		JsonIt:       controllers.GetJSONItr(servicev1alpha1.GetEncoder(), servicev1alpha1.GetDecoder()),
+		ResourceType: "datadog_service_level_objective",
+	},
+	{
+		Group:    "slo.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "corrections",
+	}: {
+		JsonIt:       controllers.GetJSONItr(slov1alpha1.GetEncoder(), slov1alpha1.GetDecoder()),
+		ResourceType: "datadog_slo_correction",
+	},
+	{
+		Group:    "synthetics.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "globalvariables",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_synthetics_global_variable",
+	},
+	{
+		Group:    "synthetics.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "privatelocations",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_synthetics_private_location",
+	},
+	{
+		Group:    "synthetics.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "syntheticstests",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "datadog_synthetics_test",
+	},
+	{
+		Group:    "user.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "users",
+	}: {
+		JsonIt:       controllers.GetJSONItr(userv1alpha1.GetEncoder(), userv1alpha1.GetDecoder()),
+		ResourceType: "datadog_user",
+	},
+	{
+		Group:    "webhook.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "webhooks",
+	}: {
+		JsonIt:       controllers.GetJSONItr(webhookv1alpha1.GetEncoder(), webhookv1alpha1.GetDecoder()),
+		ResourceType: "datadog_webhook",
+	},
+	{
+		Group:    "webhook.datadog.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "customvariables",
+	}: {
+		JsonIt:       controllers.GetJSONItr(webhookv1alpha1.GetEncoder(), webhookv1alpha1.GetDecoder()),
+		ResourceType: "datadog_webhook_custom_variable",
+	},
+}
 
 func getJsonItAndResType(gvr schema.GroupVersionResource) Data {
 	return allJsonIt[gvr]
