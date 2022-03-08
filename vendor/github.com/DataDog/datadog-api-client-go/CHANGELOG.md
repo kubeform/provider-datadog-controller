@@ -1,5 +1,68 @@
 # CHANGELOG
 
+## 1.8.0 / 2022-01-18
+
+* [Added] Add `filter[deleted]` parameter for searching recently deleted dashboards. See [#1296](https://github.com/DataDog/datadog-api-client-go/pull/1296).
+* [Added] Add support for authentication and proxy options in Synthetics. See [#1267](https://github.com/DataDog/datadog-api-client-go/pull/1267).
+* [Added] Support formulas and functions in Treemap Widget. See [#1291](https://github.com/DataDog/datadog-api-client-go/pull/1291).
+* [Added] Add Cloud Workload Security Agent Rules API. See [#1282](https://github.com/DataDog/datadog-api-client-go/pull/1282).
+* [Added] Add `offset` and `limit` parameters to usage listing endpoint. See [#1285](https://github.com/DataDog/datadog-api-client-go/pull/1285).
+* [Added] Add monthly usage attribution API spec. See [#1274](https://github.com/DataDog/datadog-api-client-go/pull/1274).
+* [Added] Add missing hosts metadata fields. See [#1269](https://github.com/DataDog/datadog-api-client-go/pull/1269).
+* [Added] Add `replay_session_count ` and update documentation for `rum_session_count`. See [#1284](https://github.com/DataDog/datadog-api-client-go/pull/1284).
+* [Added] Add retry options for a step in Synthetics multistep test. See [#1277](https://github.com/DataDog/datadog-api-client-go/pull/1277).
+* [Added] Document `author_name` in dashboard response. See [#1275](https://github.com/DataDog/datadog-api-client-go/pull/1275).
+* [Added] Add organization metadata for RUM sessions usage and expose `rum_browser_and_mobile_session_count`. See [#1270](https://github.com/DataDog/datadog-api-client-go/pull/1270).
+* [Added] Add endpoint to retrieve hourly usage attribution. See [#1249](https://github.com/DataDog/datadog-api-client-go/pull/1249).
+* [Added] Add support for scoped application keys. See [#1234](https://github.com/DataDog/datadog-api-client-go/pull/1234).
+* [Added] Add endpoint for cloning roles. See [#1258](https://github.com/DataDog/datadog-api-client-go/pull/1258).
+* [Added] Add organization metadata for audit logs, CWS, CSPM, DBM. See [#1264](https://github.com/DataDog/datadog-api-client-go/pull/1264).
+* [Added] Add `ci-pipelines alert` to monitors enum. See [#1255](https://github.com/DataDog/datadog-api-client-go/pull/1255).
+* [Added] Add support for sunburst widget in dashboard. See [#1262](https://github.com/DataDog/datadog-api-client-go/pull/1262).
+* [Fixed] Clarify required fields for `SyntheticsAPIStep`, `SyntheticsAPITest`, and `SyntheticsBrowserTest`. See [#1202](https://github.com/DataDog/datadog-api-client-go/pull/1202).
+* [Fixed] Fixes to Cloud Workload Security API. See [#1294](https://github.com/DataDog/datadog-api-client-go/pull/1294).
+* [Fixed] Make downtime weekdays nullable. See [#1279](https://github.com/DataDog/datadog-api-client-go/pull/1279).
+* [Fixed] Fix a typo in an incident field attribute description. See [#1240](https://github.com/DataDog/datadog-api-client-go/pull/1240).
+* [Fixed] Fix `SecurityMonitoringSignal.attributes.tags` type. See [#1243](https://github.com/DataDog/datadog-api-client-go/pull/1243).
+* [Changed] Remove read only fields in `EventCreateRequest`. See [#1292](https://github.com/DataDog/datadog-api-client-go/pull/1292).
+* [Changed] Change pagination arguments for querying usage attribution. See [#1273](https://github.com/DataDog/datadog-api-client-go/pull/1273).
+* [Deprecated] Remove session counts from RUM units response. See [#1252](https://github.com/DataDog/datadog-api-client-go/pull/1252).
+* [Removed] Remove deprecated AgentRule field in Security Rules API for CWS. See [#1268](https://github.com/DataDog/datadog-api-client-go/pull/1268).
+
+## 1.7.0 / 2021-12-09
+
+* [Added] Add Limit Note for Hourly Requests. See [#1230](https://github.com/DataDog/datadog-api-client-go/pull/1230).
+* [Added] Expose estimated logs usage in Usage Attribution API. See [#1231](https://github.com/DataDog/datadog-api-client-go/pull/1231).
+* [Added] Add endpoint to get corrections applied to an SLO. See [#1221](https://github.com/DataDog/datadog-api-client-go/pull/1221).
+* [Added] Expose `public_id` and `org_name` in Usage API response. See [#1224](https://github.com/DataDog/datadog-api-client-go/pull/1224).
+* [Added] Document query in `MonitorSearchResult`. See [#1222](https://github.com/DataDog/datadog-api-client-go/pull/1222).
+* [Added] Add 429 error responses. See [#1208](https://github.com/DataDog/datadog-api-client-go/pull/1208).
+* [Added] Add support for profiled Fargate tasks in Usage API. See [#1205](https://github.com/DataDog/datadog-api-client-go/pull/1205).
+* [Added] Add support for `websocket` synthetics tests. See [#1206](https://github.com/DataDog/datadog-api-client-go/pull/1206).
+* [Added] [Synthetics] Add support for UDP API tests. See [#1197](https://github.com/DataDog/datadog-api-client-go/pull/1197).
+* [Added] Add trigger synthetics tests endpoint. See [#1173](https://github.com/DataDog/datadog-api-client-go/pull/1173).
+* [Added] Add RUM Units to usage metering API. See [#1188](https://github.com/DataDog/datadog-api-client-go/pull/1188).
+* [Added] [dashboards formulas and functions] Add formulas and functions support to change widget. See [#1204](https://github.com/DataDog/datadog-api-client-go/pull/1204).
+* [Fixed] Be more resilient to plain text errors. See [#1227](https://github.com/DataDog/datadog-api-client-go/pull/1227).
+* [Fixed] Fix monitor `timeout_h` example and limits. See [#1219](https://github.com/DataDog/datadog-api-client-go/pull/1219).
+* [Fixed] Remove event title length constraint. See [#1215](https://github.com/DataDog/datadog-api-client-go/pull/1215).
+* [Fixed] Mark `batch_id` in Synthetics Trigger CI response as nullable. See [#1210](https://github.com/DataDog/datadog-api-client-go/pull/1210).
+* [Fixed] SLO Correction attributes `rrule` and `duration` can be nullable. See [#1200](https://github.com/DataDog/datadog-api-client-go/pull/1200).
+* [Fixed] Change `UsageNetworkFlowsHour.indexed_event_count` to match actual API. See [#1196](https://github.com/DataDog/datadog-api-client-go/pull/1196).
+* [Fixed] Fix type for `ratio_in_month` in usage metering. See [#1183](https://github.com/DataDog/datadog-api-client-go/pull/1183).
+* [Changed] [Synthetics] Fix required target in assertions and type in step results. See [#1201](https://github.com/DataDog/datadog-api-client-go/pull/1201).
+
+## 1.6.0 / 2021-11-09
+
+* [Added] Add support for Azure `automute` option. See [#1179](https://github.com/DataDog/datadog-api-client-go/pull/1179).
+* [Added] Add v2 intake endpoint. See [#1172](https://github.com/DataDog/datadog-api-client-go/pull/1172).
+* [Added] Add support for RRULE fields in SLO corrections. See [#1126](https://github.com/DataDog/datadog-api-client-go/pull/1126).
+* [Added] Add aggregations attribute to v2 metric tag configuration. See [#1101](https://github.com/DataDog/datadog-api-client-go/pull/1101).
+* [Added] Add `apm_stats_query` property to `DistributionWidgetRequest`. See [#1161](https://github.com/DataDog/datadog-api-client-go/pull/1161).
+* [Fixed] Use plural form for dbm hosts usage properties. See [#1141](https://github.com/DataDog/datadog-api-client-go/pull/1141).
+* [Changed] Update Synthetics CI test metadata. See [#1140](https://github.com/DataDog/datadog-api-client-go/pull/1140).
+* [Deprecated] Update property descriptions for Dashboard RBAC release. See [#1171](https://github.com/DataDog/datadog-api-client-go/pull/1171).
+
 ## 1.5.0 / 2021-10-18
 
 * [Added] Add support for funnel widget in dashboards. See [#1115](https://github.com/DataDog/datadog-api-client-go/pull/1115).

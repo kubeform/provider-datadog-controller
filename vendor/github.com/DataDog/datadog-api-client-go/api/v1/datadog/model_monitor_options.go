@@ -39,7 +39,7 @@ type MonitorOptions struct {
 	// Time (in seconds) to allow a host to boot and applications to fully start before starting the evaluation of monitor results. Should be a non negative integer.  Use new_group_delay instead.
 	// Deprecated
 	NewHostDelay NullableInt64 `json:"new_host_delay,omitempty"`
-	// The number of minutes before a monitor notifies after data stops reporting. Datadog recommends at least 2x the monitor timeframe for metric alerts or 2 minutes for service checks. If omitted, 2x the evaluation timeframe is used for metric alerts, and 24 hours is used for service checks.
+	// The number of minutes before a monitor notifies after data stops reporting. Datadog recommends at least 2x the monitor timeframe for query alerts or 2 minutes for service checks. If omitted, 2x the evaluation timeframe is used for query alerts, and 24 hours is used for service checks.
 	NoDataTimeframe NullableInt64 `json:"no_data_timeframe,omitempty"`
 	// A Boolean indicating whether tagged users is notified on changes to this monitor.
 	NotifyAudit *bool `json:"notify_audit,omitempty"`
@@ -61,7 +61,7 @@ type MonitorOptions struct {
 	SyntheticsCheckId NullableString                 `json:"synthetics_check_id,omitempty"`
 	ThresholdWindows  *MonitorThresholdWindowOptions `json:"threshold_windows,omitempty"`
 	Thresholds        *MonitorThresholds             `json:"thresholds,omitempty"`
-	// The number of hours of the monitor not reporting data before it automatically resolves from a triggered state.
+	// The number of hours of the monitor not reporting data before it automatically resolves from a triggered state. The minimum allowed value is 0 hours. The maximum allowed value is 24 hours.
 	TimeoutH NullableInt64 `json:"timeout_h,omitempty"`
 	// UnparsedObject contains the raw value of the object if there was an error when deserializing into the struct
 	UnparsedObject map[string]interface{} `json:-`

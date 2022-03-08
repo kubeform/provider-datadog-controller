@@ -17,6 +17,7 @@ import (
 
 	datadogV1 "github.com/DataDog/datadog-api-client-go/api/v1/datadog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -188,6 +189,11 @@ func syntheticsTestRequest() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"message": {
+				Description: "For UDP and websocket tests, message to send with the request.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -333,6 +339,30 @@ func syntheticsAPIAssertion() *schema.Schema {
 	}
 }
 
+func syntheticsTestOptionsRetry() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"count": {
+					Description: "Number of retries needed to consider a location as failed before sending a notification alert.",
+					Type:        schema.TypeInt,
+					Default:     0,
+					Optional:    true,
+				},
+				"interval": {
+					Description: "Interval between a failed test and the next retry in milliseconds.",
+					Type:        schema.TypeInt,
+					Default:     300,
+					Optional:    true,
+				},
+			},
+		},
+	}
+}
+
 func syntheticsTestOptionsList() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -389,27 +419,7 @@ func syntheticsTestOptionsList() *schema.Schema {
 					Optional:     true,
 					ValidateFunc: validation.IntBetween(1, 5),
 				},
-				"retry": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"count": {
-								Description: "Number of retries needed to consider a location as failed before sending a notification alert.",
-								Type:        schema.TypeInt,
-								Default:     0,
-								Optional:    true,
-							},
-							"interval": {
-								Description: "Interval between a failed test and the next retry in milliseconds.",
-								Type:        schema.TypeInt,
-								Default:     300,
-								Optional:    true,
-							},
-						},
-					},
-				},
+				"retry": syntheticsTestOptionsRetry(),
 				"no_screenshot": {
 					Description: "Prevents saving screenshots of the steps.",
 					Type:        schema.TypeBool,
@@ -509,6 +519,7 @@ func syntheticsTestAPIStep() *schema.Schema {
 					Type:        schema.TypeBool,
 					Optional:    true,
 				},
+				"retry": syntheticsTestOptionsRetry(),
 			},
 		},
 	}
@@ -807,20 +818,39 @@ func resourceDatadogSyntheticsTestCreate(ctx context.Context, d *schema.Resource
 
 	if testType == datadogV1.SYNTHETICSTESTDETAILSTYPE_API {
 		syntheticsTest := buildSyntheticsAPITestStruct(d)
-		createdSyntheticsTest, httpResponse, err := datadogClientV1.SyntheticsApi.CreateSyntheticsAPITest(authV1, *syntheticsTest)
+		createdSyntheticsTest, httpResponseCreate, err := datadogClientV1.SyntheticsApi.CreateSyntheticsAPITest(authV1, *syntheticsTest)
 		if err != nil {
 			// Note that Id won't be set, so no state will be saved.
-			return utils.TranslateClientErrorDiag(err, httpResponse, "error creating synthetics API test")
+			return utils.TranslateClientErrorDiag(err, httpResponseCreate, "error creating synthetics API test")
 		}
 		if err := utils.CheckForUnparsed(createdSyntheticsTest); err != nil {
 			return diag.FromErr(err)
 		}
 
-		// If the Create callback returns with or without an error without an ID set using SetId,
-		// the resource is assumed to not be created, and no state is saved.
-		d.SetId(createdSyntheticsTest.GetPublicId())
+		var getSyntheticsApiTestResponse datadogV1.SyntheticsAPITest
+		var httpResponseGet *_nethttp.Response
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+			getSyntheticsApiTestResponse, httpResponseGet, err = datadogClientV1.SyntheticsApi.GetAPITest(authV1, createdSyntheticsTest.GetPublicId())
+			if err != nil {
+				if httpResponseGet != nil && httpResponseGet.StatusCode == 404 {
+					return resource.RetryableError(fmt.Errorf("synthetics api test not created yet"))
+				}
 
-		return updateSyntheticsAPITestLocalState(d, &createdSyntheticsTest)
+				return resource.NonRetryableError(err)
+			}
+			if err := utils.CheckForUnparsed(getSyntheticsApiTestResponse); err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(getSyntheticsApiTestResponse.GetPublicId())
+
+		return updateSyntheticsAPITestLocalState(d, &getSyntheticsApiTestResponse)
 	} else if testType == datadogV1.SYNTHETICSTESTDETAILSTYPE_BROWSER {
 		syntheticsTest := buildSyntheticsBrowserTestStruct(d)
 		createdSyntheticsTest, httpResponse, err := datadogClientV1.SyntheticsApi.CreateSyntheticsBrowserTest(authV1, *syntheticsTest)
@@ -832,11 +862,30 @@ func resourceDatadogSyntheticsTestCreate(ctx context.Context, d *schema.Resource
 			return diag.FromErr(err)
 		}
 
-		// If the Create callback returns with or without an error without an ID set using SetId,
-		// the resource is assumed to not be created, and no state is saved.
-		d.SetId(createdSyntheticsTest.GetPublicId())
+		var getSyntheticsBrowserTestResponse datadogV1.SyntheticsBrowserTest
+		var httpResponseGet *_nethttp.Response
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+			getSyntheticsBrowserTestResponse, httpResponseGet, err = datadogClientV1.SyntheticsApi.GetBrowserTest(authV1, createdSyntheticsTest.GetPublicId())
+			if err != nil {
+				if httpResponseGet != nil && httpResponseGet.StatusCode == 404 {
+					return resource.RetryableError(fmt.Errorf("synthetics browser test not created yet"))
+				}
 
-		return updateSyntheticsBrowserTestLocalState(d, &createdSyntheticsTest)
+				return resource.NonRetryableError(err)
+			}
+			if err := utils.CheckForUnparsed(getSyntheticsBrowserTestResponse); err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(getSyntheticsBrowserTestResponse.GetPublicId())
+
+		return updateSyntheticsBrowserTestLocalState(d, &getSyntheticsBrowserTestResponse)
 	}
 
 	return diag.Errorf("unrecognized synthetics test type %v", testType)
@@ -969,9 +1018,8 @@ func getSyntheticsTestType(d *schema.ResourceData) datadogV1.SyntheticsTestDetai
 }
 
 func buildSyntheticsAPITestStruct(d *schema.ResourceData) *datadogV1.SyntheticsAPITest {
-	syntheticsTest := datadogV1.NewSyntheticsAPITest()
+	syntheticsTest := datadogV1.NewSyntheticsAPITestWithDefaults()
 	syntheticsTest.SetName(d.Get("name").(string))
-	syntheticsTest.SetType(datadogV1.SYNTHETICSAPITESTTYPE_API)
 
 	if attr, ok := d.GetOk("subtype"); ok {
 		syntheticsTest.SetSubtype(datadogV1.SyntheticsTestDetailsSubType(attr.(string)))
@@ -1019,6 +1067,9 @@ func buildSyntheticsAPITestStruct(d *schema.ResourceData) *datadogV1.SyntheticsA
 	}
 	if attr, ok := k.GetOkWith("servername"); ok {
 		request.SetServername(attr.(string))
+	}
+	if attr, ok := k.GetOkWith("message"); ok {
+		request.SetMessage(attr.(string))
 	}
 	k.Remove(parts)
 
@@ -1079,13 +1130,15 @@ func buildSyntheticsAPITestStruct(d *schema.ResourceData) *datadogV1.SyntheticsA
 
 			request := datadogV1.SyntheticsTestRequest{}
 			requests := stepMap["request_definition"].([]interface{})
-			requestMap := requests[0].(map[string]interface{})
-			request.SetMethod(datadogV1.HTTPMethod(requestMap["method"].(string)))
-			request.SetUrl(requestMap["url"].(string))
-			request.SetBody(requestMap["body"].(string))
-			request.SetTimeout(float64(requestMap["timeout"].(int)))
-			request.SetAllowInsecure(requestMap["allow_insecure"].(bool))
-			request.SetFollowRedirects(requestMap["follow_redirects"].(bool))
+			if len(requests) > 0 && requests[0] != nil {
+				requestMap := requests[0].(map[string]interface{})
+				request.SetMethod(datadogV1.HTTPMethod(requestMap["method"].(string)))
+				request.SetUrl(requestMap["url"].(string))
+				request.SetBody(requestMap["body"].(string))
+				request.SetTimeout(float64(requestMap["timeout"].(int)))
+				request.SetAllowInsecure(requestMap["allow_insecure"].(bool))
+				request.SetFollowRedirects(requestMap["follow_redirects"].(bool))
+			}
 
 			request = completeSyntheticsTestRequest(request, stepMap["request_headers"].(map[string]interface{}), stepMap["request_query"].(map[string]interface{}), stepMap["request_basicauth"].([]interface{}), stepMap["request_client_certificate"].([]interface{}))
 
@@ -1093,6 +1146,20 @@ func buildSyntheticsAPITestStruct(d *schema.ResourceData) *datadogV1.SyntheticsA
 
 			step.SetAllowFailure(stepMap["allow_failure"].(bool))
 			step.SetIsCritical(stepMap["is_critical"].(bool))
+
+			optionsRetry := datadogV1.SyntheticsTestOptionsRetry{}
+			retries := stepMap["retry"].([]interface{})
+			if len(retries) > 0 && retries[0] != nil {
+				retry := retries[0]
+
+				if count, ok := retry.(map[string]interface{})["count"]; ok {
+					optionsRetry.SetCount(int64(count.(int)))
+				}
+				if interval, ok := retry.(map[string]interface{})["interval"]; ok {
+					optionsRetry.SetInterval(float64(interval.(int)))
+				}
+				step.SetRetry(optionsRetry)
+			}
 
 			steps = append(steps, step)
 		}
@@ -1204,11 +1271,13 @@ func completeSyntheticsTestRequest(request datadogV1.SyntheticsTestRequest, requ
 	}
 
 	if len(basicAuth) > 0 {
-		requestBasicAuth := basicAuth[0].(map[string]interface{})
-
-		if requestBasicAuth["username"] != "" && requestBasicAuth["password"] != "" {
-			basicAuth := datadogV1.NewSyntheticsBasicAuth(requestBasicAuth["password"].(string), requestBasicAuth["username"].(string))
-			request.SetBasicAuth(*basicAuth)
+		if requestBasicAuth, ok := basicAuth[0].(map[string]interface{}); ok {
+			if requestBasicAuth["username"] != "" && requestBasicAuth["password"] != "" {
+				basicAuth := datadogV1.NewSyntheticsBasicAuthWebWithDefaults()
+				basicAuth.SetPassword(requestBasicAuth["password"].(string))
+				basicAuth.SetUsername(requestBasicAuth["username"].(string))
+				request.SetBasicAuth(datadogV1.SyntheticsBasicAuthWebAsSyntheticsBasicAuth(basicAuth))
+			}
 		}
 	}
 
@@ -1285,7 +1354,11 @@ func buildAssertions(attr []interface{}) []datadogV1.SyntheticsAssertion {
 							case
 								datadogV1.SYNTHETICSASSERTIONOPERATOR_LESS_THAN,
 								datadogV1.SYNTHETICSASSERTIONOPERATOR_MORE_THAN:
-								setFloatTargetValue(subTarget, v.(string))
+								if match, _ := regexp.MatchString("{{\\s*[a-zA-Z0-9]+\\s*}}", v.(string)); match {
+									subTarget.SetTargetValue(v)
+								} else {
+									setFloatTargetValue(subTarget, v.(string))
+								}
 							default:
 								subTarget.SetTargetValue(v)
 							}
@@ -1297,7 +1370,9 @@ func buildAssertions(attr []interface{}) []datadogV1.SyntheticsAssertion {
 					}
 					assertions = append(assertions, datadogV1.SyntheticsAssertionJSONPathTargetAsSyntheticsAssertion(assertionJSONPathTarget))
 				} else {
-					assertionTarget := datadogV1.NewSyntheticsAssertionTarget(datadogV1.SyntheticsAssertionOperator(assertionOperator), datadogV1.SyntheticsAssertionType(assertionType))
+					assertionTarget := datadogV1.NewSyntheticsAssertionTargetWithDefaults()
+					assertionTarget.SetOperator(datadogV1.SyntheticsAssertionOperator(assertionOperator))
+					assertionTarget.SetType(datadogV1.SyntheticsAssertionType(assertionType))
 					if v, ok := assertionMap["property"].(string); ok && len(v) > 0 {
 						assertionTarget.SetProperty(v)
 					}
@@ -1348,8 +1423,10 @@ func buildSyntheticsBrowserTestStruct(d *schema.ResourceData) *datadogV1.Synthet
 
 	if username, ok := d.GetOk("request_basicauth.0.username"); ok {
 		if password, ok := d.GetOk("request_basicauth.0.password"); ok {
-			basicAuth := datadogV1.NewSyntheticsBasicAuth(password.(string), username.(string))
-			request.SetBasicAuth(*basicAuth)
+			basicAuth := datadogV1.NewSyntheticsBasicAuthWebWithDefaults()
+			basicAuth.SetPassword(password.(string))
+			basicAuth.SetUsername(username.(string))
+			request.SetBasicAuth(datadogV1.SyntheticsBasicAuthWebAsSyntheticsBasicAuth(basicAuth))
 		}
 	}
 	if attr, ok := d.GetOk("request_headers"); ok {
@@ -1517,9 +1594,9 @@ func buildSyntheticsBrowserTestStruct(d *schema.ResourceData) *datadogV1.Synthet
 		config.SetSetCookie(attr.(string))
 	}
 
-	syntheticsTest := datadogV1.NewSyntheticsBrowserTest(d.Get("message").(string))
+	syntheticsTest := datadogV1.NewSyntheticsBrowserTestWithDefaults()
+	syntheticsTest.SetMessage(d.Get("message").(string))
 	syntheticsTest.SetName(d.Get("name").(string))
-	syntheticsTest.SetType(datadogV1.SYNTHETICSBROWSERTESTTYPE_BROWSER)
 	syntheticsTest.SetConfig(config)
 	syntheticsTest.SetOptions(*options)
 	syntheticsTest.SetStatus(datadogV1.SyntheticsTestPauseStatus(d.Get("status").(string)))
@@ -1612,6 +1689,9 @@ func buildLocalRequest(request datadogV1.SyntheticsTestRequest) map[string]inter
 	if request.HasServername() {
 		localRequest["servername"] = request.GetServername()
 	}
+	if request.HasMessage() {
+		localRequest["message"] = request.GetMessage()
+	}
 
 	return localRequest
 }
@@ -1651,9 +1731,10 @@ func buildLocalAssertions(actualAssertions []datadogV1.SyntheticsAssertion) (loc
 					localTarget["operator"] = string(*v)
 				}
 				if v, ok := target.GetTargetValueOk(); ok {
-					if vAsString, ok := (*v).(string); ok {
+					val := v.(*interface{})
+					if vAsString, ok := (*val).(string); ok {
 						localTarget["targetvalue"] = vAsString
-					} else if vAsFloat, ok := (*v).(float64); ok {
+					} else if vAsFloat, ok := (*val).(float64); ok {
 						localTarget["targetvalue"] = strconv.FormatFloat(vAsFloat, 'f', -1, 64)
 					} else {
 						return localAssertions, fmt.Errorf("unrecognized targetvalue type %v", v)
@@ -1741,10 +1822,10 @@ func updateSyntheticsBrowserTestLocalState(d *schema.ResourceData, syntheticsTes
 	if err := d.Set("request_query", actualRequest.GetQuery()); err != nil {
 		return diag.FromErr(err)
 	}
-	if basicAuth, ok := actualRequest.GetBasicAuthOk(); ok {
+	if basicAuth, ok := actualRequest.GetBasicAuthOk(); ok && basicAuth.SyntheticsBasicAuthWeb != nil {
 		localAuth := make(map[string]string)
-		localAuth["username"] = basicAuth.Username
-		localAuth["password"] = basicAuth.Password
+		localAuth["username"] = basicAuth.SyntheticsBasicAuthWeb.Username
+		localAuth["password"] = basicAuth.SyntheticsBasicAuthWeb.Password
 		if err := d.Set("request_basicauth", []map[string]string{localAuth}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -1989,10 +2070,10 @@ func updateSyntheticsAPITestLocalState(d *schema.ResourceData, syntheticsTest *d
 	if err := d.Set("request_query", actualRequest.GetQuery()); err != nil {
 		return diag.FromErr(err)
 	}
-	if basicAuth, ok := actualRequest.GetBasicAuthOk(); ok {
+	if basicAuth, ok := actualRequest.GetBasicAuthOk(); ok && basicAuth.SyntheticsBasicAuthWeb != nil {
 		localAuth := make(map[string]string)
-		localAuth["username"] = basicAuth.Username
-		localAuth["password"] = basicAuth.Password
+		localAuth["username"] = basicAuth.SyntheticsBasicAuthWeb.Username
+		localAuth["password"] = basicAuth.SyntheticsBasicAuthWeb.Password
 		if err := d.Set("request_basicauth", []map[string]string{localAuth}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -2089,10 +2170,10 @@ func updateSyntheticsAPITestLocalState(d *schema.ResourceData, syntheticsTest *d
 			localStep["request_headers"] = stepRequest.GetHeaders()
 			localStep["request_query"] = stepRequest.GetQuery()
 
-			if basicAuth, ok := stepRequest.GetBasicAuthOk(); ok {
+			if basicAuth, ok := stepRequest.GetBasicAuthOk(); ok && basicAuth.SyntheticsBasicAuthWeb != nil {
 				localAuth := make(map[string]string)
-				localAuth["username"] = basicAuth.Username
-				localAuth["password"] = basicAuth.Password
+				localAuth["username"] = basicAuth.SyntheticsBasicAuthWeb.Username
+				localAuth["password"] = basicAuth.SyntheticsBasicAuthWeb.Password
 				localStep["request_basicauth"] = []map[string]string{localAuth}
 			}
 
@@ -2127,6 +2208,17 @@ func updateSyntheticsAPITestLocalState(d *schema.ResourceData, syntheticsTest *d
 
 			localStep["allow_failure"] = step.GetAllowFailure()
 			localStep["is_critical"] = step.GetIsCritical()
+
+			if retry, ok := step.GetRetryOk(); ok {
+				localRetry := make(map[string]interface{})
+				if count, ok := retry.GetCountOk(); ok {
+					localRetry["count"] = *count
+				}
+				if interval, ok := retry.GetIntervalOk(); ok {
+					localRetry["interval"] = *interval
+				}
+				localStep["retry"] = []map[string]interface{}{localRetry}
+			}
 
 			localSteps[i] = localStep
 		}

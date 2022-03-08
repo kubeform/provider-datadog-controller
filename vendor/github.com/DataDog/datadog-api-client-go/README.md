@@ -111,6 +111,14 @@ on your configuration object:
     configuration.Compress = false
 ```
 
+### Enable requests logging
+
+If you want to enable requests logging, set the `debug` flag on your configuration object:
+
+```go
+    configuration.Debug = true
+```
+
 ## Documentation
 
 Documentation for API endpoints and models can be found under the docs subdirectories, in [v1](/api/v1/datadog#documentation-for-api-endpoints)

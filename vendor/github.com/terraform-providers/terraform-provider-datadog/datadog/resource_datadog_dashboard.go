@@ -81,19 +81,12 @@ func resourceDatadogDashboard() *schema.Resource {
 				Computed:    true,
 				Description: "The URL of the dashboard.",
 			},
-			"is_read_only": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Default:       false,
-				ConflictsWith: []string{"restricted_roles"},
-				Description:   "Whether this dashboard is read-only.",
-			},
 			"restricted_roles": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"is_read_only"},
-				Description:   "Role UUIDs corresponding to users authorized to edit the dashboard. **This feature is currently in beta.**",
+				Description:   "UUIDs of roles whose associated users are authorized to edit the dashboard.",
 			},
 			"template_variable": {
 				Type:        schema.TypeList,
@@ -112,7 +105,7 @@ func resourceDatadogDashboard() *schema.Resource {
 				},
 			},
 			"notify_list": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "The list of handles for the users to notify when changes are made to this dashboard.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -128,6 +121,14 @@ func resourceDatadogDashboard() *schema.Resource {
 				Computed:    true,
 				Description: "A list of dashboard lists this dashboard should be removed from. Internal only.",
 				Elem:        &schema.Schema{Type: schema.TypeInt},
+			},
+			"is_read_only": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"restricted_roles"},
+				Description:   "Whether this dashboard is read-only.",
+				Deprecated:    "Prefer using `restricted_roles` to define which roles are required to edit the dashboard.",
 			},
 		},
 	}
@@ -355,8 +356,8 @@ func buildDatadogDashboard(d *schema.ResourceData) (*datadogV1.Dashboard, error)
 	dashboard.SetWidgets(*datadogWidgets)
 
 	// Build NotifyList
-	notifyList := d.Get("notify_list").([]interface{})
-	dashboard.NotifyList = *buildDatadogNotifyList(&notifyList)
+	notifyList := d.Get("notify_list").(*schema.Set)
+	dashboard.NotifyList = *buildDatadogNotifyList(notifyList)
 
 	// Build TemplateVariables
 	templateVariables := d.Get("template_variable").([]interface{})
@@ -591,9 +592,9 @@ func buildTerraformRestrictedRoles(datadogRestrictedRoles *[]string) *[]string {
 // Notify List helpers
 //
 
-func buildDatadogNotifyList(terraformNotifyList *[]interface{}) *[]string {
-	datadogNotifyList := make([]string, len(*terraformNotifyList))
-	for i, authorHandle := range *terraformNotifyList {
+func buildDatadogNotifyList(terraformNotifyList *schema.Set) *[]string {
+	datadogNotifyList := make([]string, len(terraformNotifyList.List()))
+	for i, authorHandle := range terraformNotifyList.List() {
 		datadogNotifyList[i] = authorHandle.(string)
 	}
 	return &datadogNotifyList
@@ -824,6 +825,15 @@ func getNonGroupWidgetSchema() map[string]*schema.Schema {
 				Schema: getServiceLevelObjectiveDefinitionSchema(),
 			},
 		},
+		"sunburst_definition": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "The definition for a Sunburst widget.",
+			Elem: &schema.Resource{
+				Schema: getSunburstDefinitionschema(),
+			},
+		},
 		"timeseries_definition": {
 			Type:        schema.TypeList,
 			Optional:    true,
@@ -966,6 +976,10 @@ func buildDatadogWidget(terraformWidget map[string]interface{}) (*datadogV1.Widg
 	} else if def, ok := terraformWidget["service_level_objective_definition"].([]interface{}); ok && len(def) > 0 {
 		if serviceLevelObjectiveDefinition, ok := def[0].(map[string]interface{}); ok {
 			definition = datadogV1.SLOWidgetDefinitionAsWidgetDefinition(buildDatadogServiceLevelObjectiveDefinition(serviceLevelObjectiveDefinition))
+		}
+	} else if def, ok := terraformWidget["sunburst_definition"].([]interface{}); ok && len(def) > 0 {
+		if sunburstDefinition, ok := def[0].(map[string]interface{}); ok {
+			definition = datadogV1.SunburstWidgetDefinitionAsWidgetDefinition(buildDatadogSunburstDefinition(sunburstDefinition))
 		}
 	} else if def, ok := terraformWidget["timeseries_definition"].([]interface{}); ok && len(def) > 0 {
 		if timeseriesDefinition, ok := def[0].(map[string]interface{}); ok {
@@ -1112,6 +1126,9 @@ func buildTerraformWidget(datadogWidget datadogV1.Widget, k *utils.ResourceDataK
 	} else if widgetDefinition.SLOWidgetDefinition != nil {
 		terraformDefinition := buildTerraformServiceLevelObjectiveDefinition(*widgetDefinition.SLOWidgetDefinition)
 		terraformWidget["service_level_objective_definition"] = []map[string]interface{}{terraformDefinition}
+	} else if widgetDefinition.SunburstWidgetDefinition != nil {
+		terraformDefinition := buildTerraformSunburstDefinition(*widgetDefinition.SunburstWidgetDefinition, k.Add("sunburst_definition.0"))
+		terraformWidget["sunburst_definition"] = []map[string]interface{}{terraformDefinition}
 	} else if widgetDefinition.TimeseriesWidgetDefinition != nil {
 		terraformDefinition := buildTerraformTimeseriesDefinition(*widgetDefinition.TimeseriesWidgetDefinition, k.Add("timeseries_definition.0"))
 		k.Remove("timeseries_definition.0")
@@ -1561,6 +1578,9 @@ func getChangeRequestSchema() map[string]*schema.Schema {
 		"rum_query":      getApmLogNetworkRumSecurityAuditQuerySchema(),
 		"security_query": getApmLogNetworkRumSecurityAuditQuerySchema(),
 		"process_query":  getProcessQuerySchema(),
+		// "query" and "formula" go together
+		"query":   getFormulaQuerySchema(),
+		"formula": getFormulaSchema(),
 		// Settings specific to Change requests
 		"change_type": {
 			Description:      "Whether to show absolute or relative change.",
@@ -1601,6 +1621,9 @@ func getChangeRequestSchema() map[string]*schema.Schema {
 func buildDatadogChangeRequests(terraformRequests *[]interface{}) *[]datadogV1.ChangeWidgetRequest {
 	datadogRequests := make([]datadogV1.ChangeWidgetRequest, len(*terraformRequests))
 	for i, request := range *terraformRequests {
+		if request == nil {
+			continue
+		}
 		terraformRequest := request.(map[string]interface{})
 		// Build ChangeRequest
 		datadogChangeRequest := datadogV1.NewChangeWidgetRequest()
@@ -1621,6 +1644,29 @@ func buildDatadogChangeRequests(terraformRequests *[]interface{}) *[]datadogV1.C
 		} else if v, ok := terraformRequest["process_query"].([]interface{}); ok && len(v) > 0 {
 			processQuery := v[0].(map[string]interface{})
 			datadogChangeRequest.ProcessQuery = buildDatadogProcessQuery(processQuery)
+		} else if v, ok := terraformRequest["query"].([]interface{}); ok && len(v) > 0 {
+			queries := make([]datadogV1.FormulaAndFunctionQueryDefinition, len(v))
+			for i, q := range v {
+				query := q.(map[string]interface{})
+				if w, ok := query["event_query"].([]interface{}); ok && len(w) > 0 {
+					queries[i] = buildDatadogEventQuery(w[0].(map[string]interface{}))
+				} else if w, ok := query["metric_query"].([]interface{}); ok && len(w) > 0 {
+					queries[i] = buildDatadogMetricQuery(w[0].(map[string]interface{}))
+				} else if w, ok := query["process_query"].([]interface{}); ok && len(w) > 0 {
+					queries[i] = buildDatadogFormulaAndFunctionProcessQuery(w[0].(map[string]interface{}))
+				}
+			}
+			datadogChangeRequest.SetQueries(queries)
+			// Change request for formulas and functions always have a response format of "scalar"
+			datadogChangeRequest.SetResponseFormat(datadogV1.FormulaAndFunctionResponseFormat("scalar"))
+		}
+
+		if v, ok := terraformRequest["formula"].([]interface{}); ok && len(v) > 0 {
+			formulas := make([]datadogV1.WidgetFormula, len(v))
+			for i, formula := range v {
+				formulas[i] = buildDatadogFormula(formula.(map[string]interface{}))
+			}
+			datadogChangeRequest.SetFormulas(formulas)
 		}
 
 		if v, ok := terraformRequest["change_type"].(string); ok && len(v) != 0 {
@@ -1671,6 +1717,12 @@ func buildTerraformChangeRequests(datadogChangeRequests *[]datadogV1.ChangeWidge
 			terraformQuery := buildTerraformApmOrLogQuery(*v, k.Add(fmt.Sprintf("%d.security_query.0", i)))
 			k.Remove(fmt.Sprintf("%d.security_query.0", i))
 			terraformRequest["security_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetQueriesOk(); ok {
+			terraformRequest["query"] = buildTerraformQuery(*v)
+		}
+
+		if v, ok := datadogRequest.GetFormulasOk(); ok {
+			terraformRequest["formula"] = buildTerraformFormula(*v)
 		}
 
 		if v, ok := datadogRequest.GetChangeTypeOk(); ok {
@@ -1820,6 +1872,9 @@ func getDistributionRequestSchema() map[string]*schema.Schema {
 func buildDatadogDistributionRequests(terraformRequests *[]interface{}) *[]datadogV1.DistributionWidgetRequest {
 	datadogRequests := make([]datadogV1.DistributionWidgetRequest, len(*terraformRequests))
 	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
 		terraformRequest := r.(map[string]interface{})
 		// Build DistributionRequest
 		datadogDistributionRequest := datadogV1.NewDistributionWidgetRequest()
@@ -2433,6 +2488,9 @@ func getHeatmapRequestSchema() map[string]*schema.Schema {
 func buildDatadogHeatmapRequests(terraformRequests *[]interface{}) *[]datadogV1.HeatMapWidgetRequest {
 	datadogRequests := make([]datadogV1.HeatMapWidgetRequest, len(*terraformRequests))
 	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
 		terraformRequest := r.(map[string]interface{})
 		// Build HeatmapRequest
 		datadogHeatmapRequest := datadogV1.NewHeatMapWidgetRequest()
@@ -3562,6 +3620,9 @@ func getQueryValueRequestSchema() map[string]*schema.Schema {
 func buildDatadogQueryValueRequests(terraformRequests *[]interface{}) *[]datadogV1.QueryValueWidgetRequest {
 	datadogRequests := make([]datadogV1.QueryValueWidgetRequest, len(*terraformRequests))
 	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
 		terraformRequest := r.(map[string]interface{})
 		// Build QueryValueRequest
 		datadogQueryValueRequest := datadogV1.NewQueryValueWidgetRequest()
@@ -3829,6 +3890,9 @@ func getQueryTableRequestSchema() map[string]*schema.Schema {
 func buildDatadogQueryTableRequests(terraformRequests *[]interface{}) *[]datadogV1.TableWidgetRequest {
 	datadogRequests := make([]datadogV1.TableWidgetRequest, len(*terraformRequests))
 	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
 		terraformRequest := r.(map[string]interface{})
 		// Build QueryTableRequest
 		datadogQueryTableRequest := datadogV1.NewTableWidgetRequest()
@@ -4003,6 +4067,14 @@ func getScatterplotDefinitionSchema() map[string]*schema.Schema {
 							Schema: getScatterplotRequestSchema(),
 						},
 					},
+					"scatterplot_table": {
+						Description: "Scatterplot request containing formulas and functions.",
+						Type:        schema.TypeList,
+						Optional:    true,
+						Elem: &schema.Resource{
+							Schema: getScatterplotTableRequestSchema(),
+						},
+					},
 				},
 			},
 		},
@@ -4071,6 +4143,12 @@ func buildDatadogScatterplotDefinition(terraformDefinition map[string]interface{
 			terraformY := terraformYArray[0].(map[string]interface{})
 			datadogRequests.SetY(*buildDatadogScatterplotRequest(terraformY))
 		}
+
+		if terraformScatterplotTableRequests, ok := terraformRequests["scatterplot_table"].([]interface{}); ok && len(terraformScatterplotTableRequests) > 0 {
+			terraformScatterplotTableRequest := terraformScatterplotTableRequests[0].(map[string]interface{})
+			datadogRequests.SetTable(*buildDatadogScatterplotTableRequest(terraformScatterplotTableRequest))
+		}
+
 		datadogDefinition.SetRequests(*datadogRequests)
 	}
 
@@ -4125,6 +4203,10 @@ func buildTerraformScatterplotDefinition(datadogDefinition datadogV1.ScatterPlot
 		k.Remove("y.0")
 		terraformRequests["y"] = []map[string]interface{}{*terraformY}
 	}
+	if v, ok := datadogDefinition.Requests.GetTableOk(); ok {
+		teraformScatterplotTableRequest := buildTerraformScatterplotTableRequest(v)
+		terraformRequests["scatterplot_table"] = []map[string]interface{}{*teraformScatterplotTableRequest}
+	}
 	terraformDefinition["request"] = []map[string]interface{}{terraformRequests}
 
 	// Optional params
@@ -4162,6 +4244,14 @@ func buildTerraformScatterplotDefinition(datadogDefinition datadogV1.ScatterPlot
 	return terraformDefinition
 }
 
+func getScatterplotTableRequestSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		// "query" and "formula" go together
+		"query":   getFormulaQuerySchema(),
+		"formula": getScatterplotFormulaSchema(),
+	}
+}
+
 func getScatterplotRequestSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		// A request should implement exactly one of the following type of query
@@ -4180,6 +4270,37 @@ func getScatterplotRequestSchema() map[string]*schema.Schema {
 		},
 	}
 }
+
+func buildDatadogScatterplotTableRequest(terraformRequest map[string]interface{}) *datadogV1.ScatterplotTableRequest {
+	datadogScatterplotTableRequest := datadogV1.NewScatterplotTableRequest()
+
+	if v, ok := terraformRequest["query"].([]interface{}); ok && len(v) > 0 {
+		queries := make([]datadogV1.FormulaAndFunctionQueryDefinition, len(v))
+		for i, q := range v {
+			query := q.(map[string]interface{})
+			if w, ok := query["event_query"].([]interface{}); ok && len(w) > 0 {
+				queries[i] = buildDatadogEventQuery(w[0].(map[string]interface{}))
+			} else if w, ok := query["metric_query"].([]interface{}); ok && len(w) > 0 {
+				queries[i] = buildDatadogMetricQuery(w[0].(map[string]interface{}))
+			} else if w, ok := query["process_query"].([]interface{}); ok && len(w) > 0 {
+				queries[i] = buildDatadogFormulaAndFunctionProcessQuery(w[0].(map[string]interface{}))
+			}
+		}
+		datadogScatterplotTableRequest.SetQueries(queries)
+		datadogScatterplotTableRequest.SetResponseFormat(datadogV1.FormulaAndFunctionResponseFormat("scalar"))
+	}
+
+	if v, ok := terraformRequest["formula"].([]interface{}); ok && len(v) > 0 {
+		formulas := make([]datadogV1.ScatterplotWidgetFormula, len(v))
+		for i, formula := range v {
+			formulas[i] = buildDatadogScatterplotFormula(formula.(map[string]interface{}))
+		}
+		datadogScatterplotTableRequest.SetFormulas(formulas)
+	}
+
+	return datadogScatterplotTableRequest
+}
+
 func buildDatadogScatterplotRequest(terraformRequest map[string]interface{}) *datadogV1.ScatterPlotRequest {
 
 	datadogScatterplotRequest := datadogV1.NewScatterPlotRequest()
@@ -4208,6 +4329,20 @@ func buildDatadogScatterplotRequest(terraformRequest map[string]interface{}) *da
 
 	return datadogScatterplotRequest
 }
+
+func buildTerraformScatterplotTableRequest(datadogScatterplotTableRequest *datadogV1.ScatterplotTableRequest) *map[string]interface{} {
+	terraformRequest := map[string]interface{}{}
+
+	if v, ok := datadogScatterplotTableRequest.GetQueriesOk(); ok {
+		terraformRequest["query"] = buildTerraformQuery(*v)
+	}
+	if v, ok := datadogScatterplotTableRequest.GetFormulasOk(); ok {
+		terraformRequest["formula"] = buildTerraformScatterplotFormula(*v)
+	}
+
+	return &terraformRequest
+}
+
 func buildTerraformScatterplotRequest(datadogScatterplotRequest *datadogV1.ScatterPlotRequest, k *utils.ResourceDataKey) *map[string]interface{} {
 	terraformRequest := map[string]interface{}{}
 	if v, ok := datadogScatterplotRequest.GetQOk(); ok {
@@ -4606,6 +4741,9 @@ func buildDatadogGeomapDefinition(terraformDefinition map[string]interface{}) *d
 func buildDatadogGeomapRequests(terraformRequests *[]interface{}) *[]datadogV1.GeomapWidgetRequest {
 	datadogRequests := make([]datadogV1.GeomapWidgetRequest, len(*terraformRequests))
 	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
 		terraformRequest := r.(map[string]interface{})
 		// Build Geomap Request
 		datadogGeomapRequest := datadogV1.NewGeomapWidgetRequest()
@@ -4704,7 +4842,7 @@ func getTimeseriesDefinitionSchema() map[string]*schema.Schema {
 			},
 		},
 		"yaxis": {
-			Description: "A nested block describing the Y-Axis Controls. The structure of this block is described below",
+			Description: "A nested block describing the Y-Axis Controls. The structure of this block is described below.",
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Optional:    true,
@@ -4885,6 +5023,405 @@ func buildTerraformTimeseriesDefinition(datadogDefinition datadogV1.TimeseriesWi
 		terraformDefinition["custom_link"] = buildTerraformWidgetCustomLinks(v)
 	}
 	return terraformDefinition
+}
+
+//
+// Sunburst Widget Definition helpers
+//
+
+func getSunburstDefinitionschema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"request": {
+			Description: "Nested block describing the request to use when displaying the widget. Multiple `request` blocks are allowed with the structure below (exactly one of `q`, `log_query` or `rum_query` is required within the `request` block).",
+			Type:        schema.TypeList,
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: getSunburstRequestSchema(),
+			},
+		},
+		"hide_total": {
+			Description: "Whether or not to show the total value in the widget.",
+			Type:        schema.TypeBool,
+			Optional:    true,
+		},
+		"legend_inline": {
+			Description: "Used to configure the inline legend. Cannot be used in conjunction with legend_table.",
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"type": {
+						Description:      "The type of legend (inline or automatic).",
+						Type:             schema.TypeString,
+						ValidateDiagFunc: validators.ValidateEnumValue(datadogV1.NewSunburstWidgetLegendInlineAutomaticTypeFromValue),
+						Required:         true,
+					},
+					"hide_value": {
+						Description: "Whether to hide the values of the groups.",
+						Type:        schema.TypeBool,
+						Optional:    true,
+					},
+					"hide_percent": {
+						Description: "Whether to hide the percentages of the groups.",
+						Type:        schema.TypeBool,
+						Optional:    true,
+					},
+				},
+			},
+		},
+		"legend_table": {
+			Description: "Used to configure the table legend. Cannot be used in conjunction with legend_inline.",
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"type": {
+						Description:      "The type of legend (table or none).",
+						Type:             schema.TypeString,
+						ValidateDiagFunc: validators.ValidateEnumValue(datadogV1.NewSunburstWidgetLegendTableTypeFromValue),
+						Required:         true,
+					},
+				},
+			},
+		},
+		"title": {
+			Description: "The title of the widget.",
+			Type:        schema.TypeString,
+			Optional:    true,
+		},
+		"title_size": {
+			Description: "The size of the widget's title. Default is 16.",
+			Type:        schema.TypeString,
+			Optional:    true,
+		},
+		"title_align": {
+			Description:      "The alignment of the widget's title. One of `left`, `center`, or `right`.",
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validators.ValidateEnumValue(datadogV1.NewWidgetTextAlignFromValue),
+			Optional:         true,
+		},
+		"live_span": getWidgetLiveSpanSchema(),
+		"custom_link": {
+			Description: "Nested block describing a custom link. Multiple `custom_link` blocks are allowed with the structure below.",
+			Type:        schema.TypeList,
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: getWidgetCustomLinkSchema(),
+			},
+		},
+	}
+}
+
+func getSunburstRequestSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		// A request should implement exactly one of the following type of query
+		"q":              getMetricQuerySchema(),
+		"apm_query":      getApmLogNetworkRumSecurityAuditQuerySchema(),
+		"log_query":      getApmLogNetworkRumSecurityAuditQuerySchema(),
+		"rum_query":      getApmLogNetworkRumSecurityAuditQuerySchema(),
+		"network_query":  getApmLogNetworkRumSecurityAuditQuerySchema(),
+		"process_query":  getProcessQuerySchema(),
+		"security_query": getApmLogNetworkRumSecurityAuditQuerySchema(),
+		"audit_query":    getApmLogNetworkRumSecurityAuditQuerySchema(),
+		// "query" and "formula" go together
+		"query":   getFormulaQuerySchema(),
+		"formula": getFormulaSchema(),
+	}
+}
+
+func buildDatadogSunburstLegendInline(terraformSunburstLegendInline map[string]interface{}) datadogV1.SunburstWidgetLegend {
+	datadogSunburstLegendInline := &datadogV1.SunburstWidgetLegendInlineAutomatic{}
+	if v, ok := terraformSunburstLegendInline["type"].(string); ok && len(v) != 0 {
+		legendType := datadogV1.SunburstWidgetLegendInlineAutomaticType(terraformSunburstLegendInline["type"].(string))
+		datadogSunburstLegendInline.SetType(legendType)
+	}
+
+	if v, ok := terraformSunburstLegendInline["hide_value"].(bool); ok {
+		datadogSunburstLegendInline.SetHideValue(v)
+	}
+
+	if v, ok := terraformSunburstLegendInline["hide_percent"].(bool); ok {
+		datadogSunburstLegendInline.SetHidePercent(v)
+	}
+
+	datadogSunburstLegend := datadogV1.SunburstWidgetLegend{}
+	datadogSunburstLegend.SunburstWidgetLegendInlineAutomatic = datadogSunburstLegendInline
+
+	return datadogSunburstLegend
+}
+
+func buildDatadogSunburstLegendTable(terraformSunburstLegendTable map[string]interface{}) datadogV1.SunburstWidgetLegend {
+	datadogSunburstLegendTable := &datadogV1.SunburstWidgetLegendTable{}
+	if v, ok := terraformSunburstLegendTable["type"].(string); ok && len(v) != 0 {
+		legendType := datadogV1.SunburstWidgetLegendTableType(terraformSunburstLegendTable["type"].(string))
+		datadogSunburstLegendTable.SetType(legendType)
+	}
+
+	datadogSunburstLegend := datadogV1.SunburstWidgetLegend{}
+	datadogSunburstLegend.SunburstWidgetLegendTable = datadogSunburstLegendTable
+
+	return datadogSunburstLegend
+}
+
+func buildDatadogSunburstDefinition(terraformDefinition map[string]interface{}) *datadogV1.SunburstWidgetDefinition {
+	datadogDefinition := datadogV1.NewSunburstWidgetDefinitionWithDefaults()
+	// Required params
+	terraformRequests := terraformDefinition["request"].([]interface{})
+	datadogDefinition.Requests = *buildDatadogSunburstRequests(&terraformRequests)
+
+	// Optional params
+	if legendInline, ok := terraformDefinition["legend_inline"].([]interface{}); ok && len(legendInline) > 0 {
+		if v, ok := legendInline[0].(map[string]interface{}); ok && len(v) > 0 {
+			datadogDefinition.SetLegend(buildDatadogSunburstLegendInline(v))
+		}
+	}
+
+	if legendTable, ok := terraformDefinition["legend_table"].([]interface{}); ok && len(legendTable) > 0 {
+		if v, ok := legendTable[0].(map[string]interface{}); ok && len(v) > 0 {
+			datadogDefinition.SetLegend(buildDatadogSunburstLegendTable(v))
+		}
+	}
+
+	if hideTotal, ok := terraformDefinition["hide_total"].(bool); ok && hideTotal {
+		datadogDefinition.SetHideTotal(hideTotal)
+	}
+
+	if v, ok := terraformDefinition["custom_link"].([]interface{}); ok && len(v) > 0 {
+		datadogDefinition.SetCustomLinks(*buildDatadogWidgetCustomLinks(&v))
+	}
+
+	if v, ok := terraformDefinition["title"].(string); ok && len(v) != 0 {
+		datadogDefinition.SetTitle(v)
+	}
+
+	if v, ok := terraformDefinition["title_size"].(string); ok && len(v) != 0 {
+		datadogDefinition.SetTitleSize(v)
+	}
+
+	if v, ok := terraformDefinition["title_align"].(string); ok && len(v) != 0 {
+		datadogDefinition.SetTitleAlign(datadogV1.WidgetTextAlign(v))
+	}
+
+	if ls, ok := terraformDefinition["live_span"].(string); ok && ls != "" {
+		datadogDefinition.Time = &datadogV1.WidgetTime{
+			LiveSpan: datadogV1.WidgetLiveSpan(ls).Ptr(),
+		}
+	}
+
+	if v, ok := terraformDefinition["custom_link"].([]interface{}); ok && len(v) > 0 {
+		datadogDefinition.SetCustomLinks(*buildDatadogWidgetCustomLinks(&v))
+	}
+
+	return datadogDefinition
+}
+
+func buildDatadogSunburstRequests(terraformRequests *[]interface{}) *[]datadogV1.SunburstWidgetRequest {
+	datadogRequests := make([]datadogV1.SunburstWidgetRequest, len(*terraformRequests))
+	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
+		terraformRequest := r.(map[string]interface{})
+		// Build Sunburst request
+		datadogSunburstRequest := datadogV1.NewSunburstWidgetRequest()
+		if v, ok := terraformRequest["q"].(string); ok && len(v) != 0 {
+			datadogSunburstRequest.SetQ(v)
+		} else if v, ok := terraformRequest["apm_query"].([]interface{}); ok && len(v) > 0 {
+			apmQuery := v[0].(map[string]interface{})
+			datadogSunburstRequest.ApmQuery = buildDatadogApmOrLogQuery(apmQuery)
+		} else if v, ok := terraformRequest["log_query"].([]interface{}); ok && len(v) > 0 {
+			logQuery := v[0].(map[string]interface{})
+			datadogSunburstRequest.LogQuery = buildDatadogApmOrLogQuery(logQuery)
+		} else if v, ok := terraformRequest["network_query"].([]interface{}); ok && len(v) > 0 {
+			networkQuery := v[0].(map[string]interface{})
+			datadogSunburstRequest.NetworkQuery = buildDatadogApmOrLogQuery(networkQuery)
+		} else if v, ok := terraformRequest["rum_query"].([]interface{}); ok && len(v) > 0 {
+			rumQuery := v[0].(map[string]interface{})
+			datadogSunburstRequest.RumQuery = buildDatadogApmOrLogQuery(rumQuery)
+		} else if v, ok := terraformRequest["security_query"].([]interface{}); ok && len(v) > 0 {
+			securityQuery := v[0].(map[string]interface{})
+			datadogSunburstRequest.SecurityQuery = buildDatadogApmOrLogQuery(securityQuery)
+		} else if v, ok := terraformRequest["process_query"].([]interface{}); ok && len(v) > 0 {
+			processQuery := v[0].(map[string]interface{})
+			datadogSunburstRequest.ProcessQuery = buildDatadogProcessQuery(processQuery)
+		} else if v, ok := terraformRequest["audit_query"].([]interface{}); ok && len(v) > 0 {
+			auditQuery := v[0].(map[string]interface{})
+			datadogSunburstRequest.AuditQuery = buildDatadogApmOrLogQuery(auditQuery)
+		} else if v, ok := terraformRequest["query"].([]interface{}); ok && len(v) > 0 {
+			queries := make([]datadogV1.FormulaAndFunctionQueryDefinition, len(v))
+			for i, q := range v {
+				query := q.(map[string]interface{})
+				if w, ok := query["event_query"].([]interface{}); ok && len(w) > 0 {
+					queries[i] = buildDatadogEventQuery(w[0].(map[string]interface{}))
+				} else if w, ok := query["metric_query"].([]interface{}); ok && len(w) > 0 {
+					queries[i] = buildDatadogMetricQuery(w[0].(map[string]interface{}))
+				} else if w, ok := query["process_query"].([]interface{}); ok && len(w) > 0 {
+					queries[i] = buildDatadogFormulaAndFunctionProcessQuery(w[0].(map[string]interface{}))
+				}
+			}
+			datadogSunburstRequest.SetQueries(queries)
+			datadogSunburstRequest.SetResponseFormat(datadogV1.FormulaAndFunctionResponseFormat("scalar"))
+		}
+		if v, ok := terraformRequest["formula"].([]interface{}); ok && len(v) > 0 {
+			formulas := make([]datadogV1.WidgetFormula, len(v))
+			for i, formula := range v {
+				formulas[i] = buildDatadogFormula(formula.(map[string]interface{}))
+			}
+			datadogSunburstRequest.SetFormulas(formulas)
+		}
+		datadogRequests[i] = *datadogSunburstRequest
+	}
+	return &datadogRequests
+}
+
+func buildTerraformSunburstRequests(datadogSunburstRequests *[]datadogV1.SunburstWidgetRequest, k *utils.ResourceDataKey) *[]map[string]interface{} {
+	terraformRequests := make([]map[string]interface{}, len(*datadogSunburstRequests))
+	for i, datadogRequest := range *datadogSunburstRequests {
+		terraformRequest := map[string]interface{}{}
+		if v, ok := datadogRequest.GetQOk(); ok {
+			terraformRequest["q"] = v
+		} else if v, ok := datadogRequest.GetApmQueryOk(); ok {
+			terraformQuery := buildTerraformApmOrLogQuery(*v, k.Add(fmt.Sprintf("%d.apm_query.0", i)))
+			k.Remove(fmt.Sprintf("%d.apm_query.0", i))
+			terraformRequest["apm_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetLogQueryOk(); ok {
+			terraformQuery := buildTerraformApmOrLogQuery(*v, k.Add(fmt.Sprintf("%d.log_query.0", i)))
+			k.Remove(fmt.Sprintf("%d.log_query.0", i))
+			terraformRequest["log_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetNetworkQueryOk(); ok {
+			terraformQuery := buildTerraformApmOrLogQuery(*v, k.Add(fmt.Sprintf("%d.network_query.0", i)))
+			k.Remove(fmt.Sprintf("%d.network_query.0", i))
+			terraformRequest["network_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetProcessQueryOk(); ok {
+			terraformQuery := buildTerraformProcessQuery(*v)
+			terraformRequest["process_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetRumQueryOk(); ok {
+			terraformQuery := buildTerraformApmOrLogQuery(*v, k.Add(fmt.Sprintf("%d.rum_query.0", i)))
+			k.Remove(fmt.Sprintf("%d.rum_query.0", i))
+			terraformRequest["rum_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetSecurityQueryOk(); ok {
+			terraformQuery := buildTerraformApmOrLogQuery(*v, k.Add(fmt.Sprintf("%d.security_query.0", i)))
+			k.Remove(fmt.Sprintf("%d.security_query.0", i))
+			terraformRequest["security_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetAuditQueryOk(); ok {
+			terraformQuery := buildTerraformApmOrLogQuery(*v, k.Add(fmt.Sprintf("%d.audit_query.0", i)))
+			k.Remove(fmt.Sprintf("%d.audit_query.0", i))
+			terraformRequest["audit_query"] = []map[string]interface{}{terraformQuery}
+		} else if v, ok := datadogRequest.GetQueriesOk(); ok {
+			terraformRequest["query"] = buildTerraformQuery(*v)
+		}
+
+		if v, ok := datadogRequest.GetFormulasOk(); ok {
+			terraformRequest["formula"] = buildTerraformFormula(*v)
+		}
+		terraformRequests[i] = terraformRequest
+	}
+	return &terraformRequests
+}
+
+func buildTerraformSunburstLegendInline(datadogSunburstLegend datadogV1.SunburstWidgetLegend) []map[string]interface{} {
+	terraformSunburstLegend := map[string]interface{}{}
+	terraformSunburstLegendInline := datadogSunburstLegend.SunburstWidgetLegendInlineAutomatic
+	if terraformSunburstLegendInline != nil {
+		if v, ok := terraformSunburstLegendInline.GetTypeOk(); ok {
+			terraformSunburstLegend["type"] = v
+		}
+
+		if v, ok := terraformSunburstLegendInline.GetHideValueOk(); ok {
+			terraformSunburstLegend["hide_value"] = v
+		}
+
+		if v, ok := terraformSunburstLegendInline.GetHidePercentOk(); ok {
+			terraformSunburstLegend["hide_percent"] = v
+		}
+	}
+
+	terraformSunburstLegendArray := []map[string]interface{}{terraformSunburstLegend}
+	return terraformSunburstLegendArray
+}
+
+func buildTerraformSunburstLegendTable(datadogSunburstLegend datadogV1.SunburstWidgetLegend) []map[string]interface{} {
+	terraformSunburstLegend := map[string]interface{}{}
+	terraformSunburstLegendTable := datadogSunburstLegend.SunburstWidgetLegendTable
+	if terraformSunburstLegendTable != nil {
+		if v, ok := terraformSunburstLegendTable.GetTypeOk(); ok {
+			terraformSunburstLegend["type"] = v
+		}
+	}
+
+	terraformSunburstLegendArray := []map[string]interface{}{terraformSunburstLegend}
+	return terraformSunburstLegendArray
+}
+
+func buildTerraformSunburstDefinition(datadogDefinition datadogV1.SunburstWidgetDefinition, k *utils.ResourceDataKey) map[string]interface{} {
+	terraformDefinition := map[string]interface{}{}
+	// Required params
+	terraformDefinition["request"] = buildTerraformSunburstRequests(&datadogDefinition.Requests, k.Add("request"))
+	k.Remove("request")
+
+	if v, ok := datadogDefinition.GetLegendOk(); ok {
+		// Use `hide_value` as a discriminant to determine which type of legend we are serializing
+		if _, ok := v.SunburstWidgetLegendInlineAutomatic.GetHideValueOk(); ok {
+			terraformDefinition["legend_inline"] = buildTerraformSunburstLegendInline(*v)
+		} else {
+			terraformDefinition["legend_table"] = buildTerraformSunburstLegendTable(*v)
+		}
+	}
+
+	if v, ok := datadogDefinition.GetHideTotalOk(); ok {
+		terraformDefinition["hide_total"] = v
+	}
+
+	if v, ok := datadogDefinition.GetCustomLinksOk(); ok {
+		terraformDefinition["custom_link"] = buildTerraformWidgetCustomLinks(v)
+	}
+
+	if v, ok := datadogDefinition.GetTitleOk(); ok {
+		terraformDefinition["title"] = *v
+	}
+
+	if v, ok := datadogDefinition.GetTitleSizeOk(); ok {
+		terraformDefinition["title_size"] = *v
+	}
+
+	if v, ok := datadogDefinition.GetTitleAlignOk(); ok {
+		terraformDefinition["title_align"] = *v
+	}
+
+	if v, ok := datadogDefinition.GetTimeOk(); ok {
+		terraformDefinition["live_span"] = v.GetLiveSpan()
+	}
+
+	return terraformDefinition
+}
+
+func getScatterplotFormulaSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"formula_expression": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A string expression built from queries, formulas, and functions.",
+				},
+				"dimension": {
+					Description:      "Dimension of the Scatterplot.",
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: validators.ValidateEnumValue(datadogV1.NewScatterplotDimensionFromValue),
+				},
+				"alias": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "An expression alias.",
+				},
+			},
+		},
+	}
 }
 
 func getFormulaSchema() *schema.Schema {
@@ -5361,6 +5898,20 @@ func getTimeseriesRequestSchema() map[string]*schema.Schema {
 	}
 }
 
+func buildDatadogScatterplotFormula(data map[string]interface{}) datadogV1.ScatterplotWidgetFormula {
+	formula := datadogV1.ScatterplotWidgetFormula{}
+	if formulaExpression, ok := data["formula_expression"].(string); ok && len(formulaExpression) != 0 {
+		formula.SetFormula(formulaExpression)
+	}
+	if alias, ok := data["alias"].(string); ok && len(alias) != 0 {
+		formula.SetAlias(alias)
+	}
+	if dimension, ok := data["dimension"].(string); ok && len(dimension) != 0 {
+		formula.SetDimension(datadogV1.ScatterplotDimension(dimension))
+	}
+	return formula
+}
+
 func buildDatadogFormula(data map[string]interface{}) datadogV1.WidgetFormula {
 	formula := datadogV1.WidgetFormula{}
 	if formulaExpression, ok := data["formula_expression"].(string); ok && len(formulaExpression) != 0 {
@@ -5572,6 +6123,9 @@ func buildDatadogFormulaAndFunctionProcessQuery(data map[string]interface{}) dat
 func buildDatadogTimeseriesRequests(terraformRequests *[]interface{}) *[]datadogV1.TimeseriesWidgetRequest {
 	datadogRequests := make([]datadogV1.TimeseriesWidgetRequest, len(*terraformRequests))
 	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
 		terraformRequest := r.(map[string]interface{})
 		// Build TimeseriesRequest
 		datadogTimeseriesRequest := datadogV1.NewTimeseriesWidgetRequest()
@@ -5852,6 +6406,9 @@ func getToplistRequestSchema() map[string]*schema.Schema {
 func buildDatadogToplistRequests(terraformRequests *[]interface{}) *[]datadogV1.ToplistWidgetRequest {
 	datadogRequests := make([]datadogV1.ToplistWidgetRequest, len(*terraformRequests))
 	for i, r := range *terraformRequests {
+		if r == nil {
+			continue
+		}
 		terraformRequest := r.(map[string]interface{})
 		// Build ToplistRequest
 		datadogToplistRequest := datadogV1.NewToplistWidgetRequest()
@@ -6883,6 +7440,20 @@ func buildTerraformQuery(datadogQueries []datadogV1.FormulaAndFunctionQueryDefin
 		}
 	}
 	return queries
+}
+
+func buildTerraformScatterplotFormula(datadogFormulas []datadogV1.ScatterplotWidgetFormula) []map[string]interface{} {
+	formulas := make([]map[string]interface{}, len(datadogFormulas))
+	for i, formula := range datadogFormulas {
+		terraformFormula := map[string]interface{}{}
+		terraformFormula["formula_expression"] = formula.GetFormula()
+		terraformFormula["dimension"] = formula.GetDimension()
+		if alias, ok := formula.GetAliasOk(); ok {
+			terraformFormula["alias"] = alias
+		}
+		formulas[i] = terraformFormula
+	}
+	return formulas
 }
 
 func buildTerraformFormula(datadogFormulas []datadogV1.WidgetFormula) []map[string]interface{} {
