@@ -18,13 +18,16 @@ import (
 type Dashboard struct {
 	// Identifier of the dashboard author.
 	AuthorHandle *string `json:"author_handle,omitempty"`
+	// Name of the dashboard author.
+	AuthorName NullableString `json:"author_name,omitempty"`
 	// Creation date of the dashboard.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// Description of the dashboard.
 	Description NullableString `json:"description,omitempty"`
 	// ID of the dashboard.
 	Id *string `json:"id,omitempty"`
-	// Whether this dashboard is read-only. If True, only the author and admins can make changes to it.
+	// Whether this dashboard is read-only. If True, only the author and admins can make changes to it. Prefer using `restricted_roles` to manage write authorization.
+	// Deprecated
 	IsReadOnly *bool               `json:"is_read_only,omitempty"`
 	LayoutType DashboardLayoutType `json:"layout_type"`
 	// Modification date of the dashboard.
@@ -32,7 +35,7 @@ type Dashboard struct {
 	// List of handles of users to notify when changes are made to this dashboard.
 	NotifyList []string             `json:"notify_list,omitempty"`
 	ReflowType *DashboardReflowType `json:"reflow_type,omitempty"`
-	// A list of role identifiers. Only the author and users associated with at least one of these roles can edit this dashboard. Overrides the `is_read_only` property if both are present. **This feature is currently in beta.**
+	// A list of role identifiers. Only the author and users associated with at least one of these roles can edit this dashboard.
 	RestrictedRoles *[]string `json:"restricted_roles,omitempty"`
 	// Array of template variables saved views.
 	TemplateVariablePresets []DashboardTemplateVariablePreset `json:"template_variable_presets,omitempty"`
@@ -102,6 +105,49 @@ func (o *Dashboard) HasAuthorHandle() bool {
 // SetAuthorHandle gets a reference to the given string and assigns it to the AuthorHandle field.
 func (o *Dashboard) SetAuthorHandle(v string) {
 	o.AuthorHandle = &v
+}
+
+// GetAuthorName returns the AuthorName field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *Dashboard) GetAuthorName() string {
+	if o == nil || o.AuthorName.Get() == nil {
+		var ret string
+		return ret
+	}
+	return *o.AuthorName.Get()
+}
+
+// GetAuthorNameOk returns a tuple with the AuthorName field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *Dashboard) GetAuthorNameOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.AuthorName.Get(), o.AuthorName.IsSet()
+}
+
+// HasAuthorName returns a boolean if a field has been set.
+func (o *Dashboard) HasAuthorName() bool {
+	if o != nil && o.AuthorName.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetAuthorName gets a reference to the given NullableString and assigns it to the AuthorName field.
+func (o *Dashboard) SetAuthorName(v string) {
+	o.AuthorName.Set(&v)
+}
+
+// SetAuthorNameNil sets the value for AuthorName to be an explicit nil
+func (o *Dashboard) SetAuthorNameNil() {
+	o.AuthorName.Set(nil)
+}
+
+// UnsetAuthorName ensures that no value is present for AuthorName, not even an explicit nil
+func (o *Dashboard) UnsetAuthorName() {
+	o.AuthorName.Unset()
 }
 
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
@@ -212,6 +258,7 @@ func (o *Dashboard) SetId(v string) {
 }
 
 // GetIsReadOnly returns the IsReadOnly field value if set, zero value otherwise.
+// Deprecated
 func (o *Dashboard) GetIsReadOnly() bool {
 	if o == nil || o.IsReadOnly == nil {
 		var ret bool
@@ -222,6 +269,7 @@ func (o *Dashboard) GetIsReadOnly() bool {
 
 // GetIsReadOnlyOk returns a tuple with the IsReadOnly field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated
 func (o *Dashboard) GetIsReadOnlyOk() (*bool, bool) {
 	if o == nil || o.IsReadOnly == nil {
 		return nil, false
@@ -239,6 +287,7 @@ func (o *Dashboard) HasIsReadOnly() bool {
 }
 
 // SetIsReadOnly gets a reference to the given bool and assigns it to the IsReadOnly field.
+// Deprecated
 func (o *Dashboard) SetIsReadOnly(v bool) {
 	o.IsReadOnly = &v
 }
@@ -550,6 +599,9 @@ func (o Dashboard) MarshalJSON() ([]byte, error) {
 	if o.AuthorHandle != nil {
 		toSerialize["author_handle"] = o.AuthorHandle
 	}
+	if o.AuthorName.IsSet() {
+		toSerialize["author_name"] = o.AuthorName.Get()
+	}
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
 	}
@@ -604,6 +656,7 @@ func (o *Dashboard) UnmarshalJSON(bytes []byte) (err error) {
 	}{}
 	all := struct {
 		AuthorHandle            *string                           `json:"author_handle,omitempty"`
+		AuthorName              NullableString                    `json:"author_name,omitempty"`
 		CreatedAt               *time.Time                        `json:"created_at,omitempty"`
 		Description             NullableString                    `json:"description,omitempty"`
 		Id                      *string                           `json:"id,omitempty"`
@@ -658,6 +711,7 @@ func (o *Dashboard) UnmarshalJSON(bytes []byte) (err error) {
 		return nil
 	}
 	o.AuthorHandle = all.AuthorHandle
+	o.AuthorName = all.AuthorName
 	o.CreatedAt = all.CreatedAt
 	o.Description = all.Description
 	o.Id = all.Id
