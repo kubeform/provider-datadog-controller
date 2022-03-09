@@ -165,6 +165,16 @@ func (a *DashboardsApiService) createDashboardExecute(r apiCreateDashboardReques
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -309,6 +319,16 @@ func (a *DashboardsApiService) deleteDashboardExecute(r apiDeleteDashboardReques
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
 			var v APIErrorResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
@@ -479,6 +499,16 @@ func (a *DashboardsApiService) deleteDashboardsExecute(r apiDeleteDashboardsRequ
 				return localVarHTTPResponse, newErr
 			}
 			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
 		}
 		return localVarHTTPResponse, newErr
 	}
@@ -621,6 +651,16 @@ func (a *DashboardsApiService) getDashboardExecute(r apiGetDashboardRequest) (Da
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -638,13 +678,15 @@ func (a *DashboardsApiService) getDashboardExecute(r apiGetDashboardRequest) (Da
 }
 
 type apiListDashboardsRequest struct {
-	ctx          _context.Context
-	ApiService   *DashboardsApiService
-	filterShared *bool
+	ctx           _context.Context
+	ApiService    *DashboardsApiService
+	filterShared  *bool
+	filterDeleted *bool
 }
 
 type ListDashboardsOptionalParameters struct {
-	FilterShared *bool
+	FilterShared  *bool
+	FilterDeleted *bool
 }
 
 func NewListDashboardsOptionalParameters() *ListDashboardsOptionalParameters {
@@ -653,6 +695,10 @@ func NewListDashboardsOptionalParameters() *ListDashboardsOptionalParameters {
 }
 func (r *ListDashboardsOptionalParameters) WithFilterShared(filterShared bool) *ListDashboardsOptionalParameters {
 	r.FilterShared = &filterShared
+	return r
+}
+func (r *ListDashboardsOptionalParameters) WithFilterDeleted(filterDeleted bool) *ListDashboardsOptionalParameters {
+	r.FilterDeleted = &filterDeleted
 	return r
 }
 
@@ -676,6 +722,7 @@ func (a *DashboardsApiService) ListDashboards(ctx _context.Context, o ...ListDas
 
 	if o != nil {
 		req.filterShared = o[0].FilterShared
+		req.filterDeleted = o[0].FilterDeleted
 	}
 
 	return req.ApiService.listDashboardsExecute(req)
@@ -708,6 +755,9 @@ func (a *DashboardsApiService) listDashboardsExecute(r apiListDashboardsRequest)
 
 	if r.filterShared != nil {
 		localVarQueryParams.Add("filter[shared]", parameterToString(*r.filterShared, ""))
+	}
+	if r.filterDeleted != nil {
+		localVarQueryParams.Add("filter[deleted]", parameterToString(*r.filterDeleted, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -781,6 +831,16 @@ func (a *DashboardsApiService) listDashboardsExecute(r apiListDashboardsRequest)
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
 			var v APIErrorResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
@@ -951,6 +1011,16 @@ func (a *DashboardsApiService) restoreDashboardsExecute(r apiRestoreDashboardsRe
 				return localVarHTTPResponse, newErr
 			}
 			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
 		}
 		return localVarHTTPResponse, newErr
 	}
@@ -1103,6 +1173,16 @@ func (a *DashboardsApiService) updateDashboardExecute(r apiUpdateDashboardReques
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
+			var v APIErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
 			var v APIErrorResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {

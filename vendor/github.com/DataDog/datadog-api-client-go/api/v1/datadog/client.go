@@ -229,7 +229,10 @@ func parameterToString(obj interface{}, collectionFormat string) string {
 	if reflect.TypeOf(obj).Kind() == reflect.Slice {
 		return strings.Trim(strings.Replace(fmt.Sprint(obj), " ", delimiter, -1), "[]")
 	} else if t, ok := obj.(time.Time); ok {
-		return t.Format(time.RFC3339)
+		if t.Nanosecond() == 0 {
+			return t.Format("2006-01-02T15:04:05Z07:00")
+		}
+		return t.Format("2006-01-02T15:04:05.000Z07:00")
 	}
 
 	return fmt.Sprintf("%v", obj)
@@ -488,21 +491,18 @@ func (c *APIClient) decode(v interface{}, b []byte, contentType string) (err err
 		}
 		return nil
 	}
-	if jsonCheck.MatchString(contentType) {
-		if actualObj, ok := v.(interface{ GetActualInstance() interface{} }); ok { // oneOf, anyOf schemas
-			if unmarshalObj, ok := actualObj.(interface{ UnmarshalJSON([]byte) error }); ok { // make sure it has UnmarshalJSON defined
-				if err = unmarshalObj.UnmarshalJSON(b); err != nil {
-					return err
-				}
-			} else {
-				return errors.New("Unknown type with GetActualInstance but no unmarshalObj.UnmarshalJSON defined")
+	if actualObj, ok := v.(interface{ GetActualInstance() interface{} }); ok { // oneOf, anyOf schemas
+		if unmarshalObj, ok := actualObj.(interface{ UnmarshalJSON([]byte) error }); ok { // make sure it has UnmarshalJSON defined
+			if err = unmarshalObj.UnmarshalJSON(b); err != nil {
+				return err
 			}
-		} else if err = json.Unmarshal(b, v); err != nil { // simple model
-			return err
+		} else {
+			return errors.New("Unknown type with GetActualInstance but no unmarshalObj.UnmarshalJSON defined")
 		}
-		return nil
+	} else if err = json.Unmarshal(b, v); err != nil { // simple model
+		return err
 	}
-	return errors.New("undefined response type")
+	return nil
 }
 
 // Add a file to the multipart request

@@ -29,14 +29,17 @@ type SyntheticsTestRequest struct {
 	// Headers to include when performing the test.
 	Headers *map[string]string `json:"headers,omitempty"`
 	// Host name to perform the test with.
-	Host   *string     `json:"host,omitempty"`
-	Method *HTTPMethod `json:"method,omitempty"`
+	Host *string `json:"host,omitempty"`
+	// Message to send for UDP or WebSocket tests.
+	Message *string     `json:"message,omitempty"`
+	Method  *HTTPMethod `json:"method,omitempty"`
 	// Determines whether or not to save the response body.
 	NoSavingResponseBody *bool `json:"noSavingResponseBody,omitempty"`
 	// Number of pings to use per test.
 	NumberOfPackets *int32 `json:"numberOfPackets,omitempty"`
 	// Port to use when performing the test.
-	Port *int64 `json:"port,omitempty"`
+	Port  *int64                      `json:"port,omitempty"`
+	Proxy *SyntheticsTestRequestProxy `json:"proxy,omitempty"`
 	// Query to use for the test.
 	Query *interface{} `json:"query,omitempty"`
 	// For SSL tests, it specifies on which server you want to initiate the TLS handshake, allowing the server to present one of multiple possible certificates on the same IP address and TCP port number.
@@ -356,6 +359,38 @@ func (o *SyntheticsTestRequest) SetHost(v string) {
 	o.Host = &v
 }
 
+// GetMessage returns the Message field value if set, zero value otherwise.
+func (o *SyntheticsTestRequest) GetMessage() string {
+	if o == nil || o.Message == nil {
+		var ret string
+		return ret
+	}
+	return *o.Message
+}
+
+// GetMessageOk returns a tuple with the Message field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SyntheticsTestRequest) GetMessageOk() (*string, bool) {
+	if o == nil || o.Message == nil {
+		return nil, false
+	}
+	return o.Message, true
+}
+
+// HasMessage returns a boolean if a field has been set.
+func (o *SyntheticsTestRequest) HasMessage() bool {
+	if o != nil && o.Message != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMessage gets a reference to the given string and assigns it to the Message field.
+func (o *SyntheticsTestRequest) SetMessage(v string) {
+	o.Message = &v
+}
+
 // GetMethod returns the Method field value if set, zero value otherwise.
 func (o *SyntheticsTestRequest) GetMethod() HTTPMethod {
 	if o == nil || o.Method == nil {
@@ -482,6 +517,38 @@ func (o *SyntheticsTestRequest) HasPort() bool {
 // SetPort gets a reference to the given int64 and assigns it to the Port field.
 func (o *SyntheticsTestRequest) SetPort(v int64) {
 	o.Port = &v
+}
+
+// GetProxy returns the Proxy field value if set, zero value otherwise.
+func (o *SyntheticsTestRequest) GetProxy() SyntheticsTestRequestProxy {
+	if o == nil || o.Proxy == nil {
+		var ret SyntheticsTestRequestProxy
+		return ret
+	}
+	return *o.Proxy
+}
+
+// GetProxyOk returns a tuple with the Proxy field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SyntheticsTestRequest) GetProxyOk() (*SyntheticsTestRequestProxy, bool) {
+	if o == nil || o.Proxy == nil {
+		return nil, false
+	}
+	return o.Proxy, true
+}
+
+// HasProxy returns a boolean if a field has been set.
+func (o *SyntheticsTestRequest) HasProxy() bool {
+	if o != nil && o.Proxy != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetProxy gets a reference to the given SyntheticsTestRequestProxy and assigns it to the Proxy field.
+func (o *SyntheticsTestRequest) SetProxy(v SyntheticsTestRequestProxy) {
+	o.Proxy = &v
 }
 
 // GetQuery returns the Query field value if set, zero value otherwise.
@@ -676,6 +743,9 @@ func (o SyntheticsTestRequest) MarshalJSON() ([]byte, error) {
 	if o.Host != nil {
 		toSerialize["host"] = o.Host
 	}
+	if o.Message != nil {
+		toSerialize["message"] = o.Message
+	}
 	if o.Method != nil {
 		toSerialize["method"] = o.Method
 	}
@@ -687,6 +757,9 @@ func (o SyntheticsTestRequest) MarshalJSON() ([]byte, error) {
 	}
 	if o.Port != nil {
 		toSerialize["port"] = o.Port
+	}
+	if o.Proxy != nil {
+		toSerialize["proxy"] = o.Proxy
 	}
 	if o.Query != nil {
 		toSerialize["query"] = o.Query
@@ -718,10 +791,12 @@ func (o *SyntheticsTestRequest) UnmarshalJSON(bytes []byte) (err error) {
 		FollowRedirects      *bool                             `json:"follow_redirects,omitempty"`
 		Headers              *map[string]string                `json:"headers,omitempty"`
 		Host                 *string                           `json:"host,omitempty"`
+		Message              *string                           `json:"message,omitempty"`
 		Method               *HTTPMethod                       `json:"method,omitempty"`
 		NoSavingResponseBody *bool                             `json:"noSavingResponseBody,omitempty"`
 		NumberOfPackets      *int32                            `json:"numberOfPackets,omitempty"`
 		Port                 *int64                            `json:"port,omitempty"`
+		Proxy                *SyntheticsTestRequestProxy       `json:"proxy,omitempty"`
 		Query                *interface{}                      `json:"query,omitempty"`
 		Servername           *string                           `json:"servername,omitempty"`
 		ShouldTrackHops      *bool                             `json:"shouldTrackHops,omitempty"`
@@ -754,10 +829,12 @@ func (o *SyntheticsTestRequest) UnmarshalJSON(bytes []byte) (err error) {
 	o.FollowRedirects = all.FollowRedirects
 	o.Headers = all.Headers
 	o.Host = all.Host
+	o.Message = all.Message
 	o.Method = all.Method
 	o.NoSavingResponseBody = all.NoSavingResponseBody
 	o.NumberOfPackets = all.NumberOfPackets
 	o.Port = all.Port
+	o.Proxy = all.Proxy
 	o.Query = all.Query
 	o.Servername = all.Servername
 	o.ShouldTrackHops = all.ShouldTrackHops
